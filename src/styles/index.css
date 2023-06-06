@@ -1,0 +1,41 @@
+@font-face {
+  font-family: "Volkhov";
+  src: url("../fonts/Volkhov/Volkhov-Regular.ttf") format("truetype");
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+
+/* header {
+  height: 40px;
+  min-height: 40px;
+  /* background-color: #FF6969;
+  background-color: #354866;
+  color: #eeeeee;
+  font-family: "Volkhov";
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+} */
+
+main {
+  flex-grow: 1;
+  background-color: #666666;
+}
+
+footer {
+  height: 40px;
+  color: #7c4dff;
+  min-height: 40px;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
