@@ -1,81 +1,42 @@
-import { useState } from "react";
+import React from "react";
 import useWindowSize from "../js/useWindowSize";
 import useResponsiveWidth from "../js/useResponsiveWidth";
+import { NavLink } from "react-router-dom";
 
-// export default function Header() {
-//   const [width, height] = useWindowSize();
-//   const contentWidth = useResponsiveWidth(width);
-
-//   return (
-//     <header>
-//       <div style={{ width: contentWidth, backgroundColor: "red" }}>header</div>
-//     </header>
-//   );
-// }
-
-import AppBar from "@mui/material/AppBar";
-import Box from "@mui/material/Box";
-import Toolbar from "@mui/material/Toolbar";
-import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
-import Menu from "@mui/material/Menu";
-import MenuIcon from "@mui/icons-material/Menu";
-import Container from "@mui/material/Container";
-import Avatar from "@mui/material/Avatar";
-import Button from "@mui/material/Button";
-import Tooltip from "@mui/material/Tooltip";
-import MenuItem from "@mui/material/MenuItem";
-import AdbIcon from "@mui/icons-material/Adb";
-
-const pages = ["Products", "Pricing", "Blog"];
-const settings = ["Profile", "Account", "Dashboard", "Logout"];
-
-function ResponsiveAppBar() {
+const ActiveNavLink = (props) => {
   return (
-    <AppBar position="static">
-      <Container maxWidth="xl">
-        <Toolbar disableGutters>
-          <AdbIcon sx={{ display: { xs: "none", md: "flex" }, mr: 1 }} />
-          <Typography
-            variant="h6"
-            noWrap
-            component="a"
-            href="/"
-            sx={{
-              mr: 2,
-              display: { xs: "none", md: "flex" },
-              fontFamily: "monospace",
-              fontWeight: 700,
-              letterSpacing: ".3rem",
-              color: "inherit",
-              textDecoration: "none",
-            }}
-          >
-            LOGO
-          </Typography>
+    <NavLink
+      className={({ isActive }) => {
+        return isActive ? "headerButtonActive" : "headerButton";
+      }}
+      {...props}
+    />
+  );
+};
 
-          <AdbIcon sx={{ display: { xs: "flex", md: "none" }, mr: 1 }} />
-          <Typography
-            variant="h5"
-            noWrap
-            component="a"
-            href=""
-            sx={{
-              mr: 2,
-              display: { xs: "flex", md: "none" },
-              flexGrow: 1,
-              fontFamily: "monospace",
-              fontWeight: 700,
-              letterSpacing: ".3rem",
-              color: "inherit",
-              textDecoration: "none",
-            }}
-          >
-            LOGO
-          </Typography>
-        </Toolbar>
-      </Container>
-    </AppBar>
+export default function Header() {
+  const [width, height] = useWindowSize();
+  const contentWidth = useResponsiveWidth(width);
+
+  return (
+    <header>
+      <div id="headerContent" style={{ width: contentWidth }}>
+        <div
+          style={{
+            padding: "10px 20px",
+            userSelect: "none",
+            backgroundColor: "white",
+            color: "#354866",
+          }}
+        >
+          Thesis Project
+        </div>
+        <div id="headerContentMain">
+          {/* <ActiveNavLink to="/admin">Admin</ActiveNavLink>
+          <ActiveNavLink to="/user">User</ActiveNavLink> */}
+        </div>
+        <ActiveNavLink to="/">Login</ActiveNavLink>
+      </div>
+    </header>
   );
 }
-export default ResponsiveAppBar;
