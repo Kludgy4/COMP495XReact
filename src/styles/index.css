@@ -11,8 +11,8 @@ body,
 }
 
 header {
-  height: 40px;
-  min-height: 40px;
+  height: 60px;
+  min-height: 60px;
   /* background-color: #FF6969;*/
   background-color: #354866;
   color: #eeeeee;
@@ -34,6 +34,7 @@ footer {
   height: 100%;
   display: flex;
   flex-direction: row;
+  align-items: center;
 }
 
 #headerContentMain {
@@ -41,27 +42,7 @@ footer {
   display: flex;
 }
 
-.headerButton,
-.headerButtonActive {
-  padding: 10px 20px;
-  text-decoration: none;
-  transition-duration: 0.2s;
-}
-
-.headerButton {
-  color: white;
-}
-
-.headerButtonActive {
-  background-color: white;
-  color: #354866;
-}
-
-.headerButton:hover,
-.headerButtonActive:hover {
-  color: #354866;
-  background-color: white;
-  text-decoration: none;
+#loginBtn {
 }
 
 #root {
@@ -84,6 +65,29 @@ main {
 #footerContent {
   display: flex;
   align-items: center;
+}
+
+button {
+  vertical-align: middle;
+  text-align: center;
+  border-radius: 2px;
+  text-decoration: none;
+  transition-duration: 0.2s;
+  color: white;
+  background-color: #7c4dff;
+  padding: 12px 24px;
+  border: none;
+}
+
+button:hover {
+  cursor: pointer;
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.3);
+  background-color: #6933ff;
+}
+
+button:active {
+  background-color: #571aff;
+  box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.6);
 }
 
 footer {

@@ -15,36 +15,18 @@ export default function App() {
   const contentWidth = useResponsiveWidth(width);
 
   return (
-    <>
+    <SessionProvider sessionId="session">
       <Header />
       <main>
-        <SessionProvider sessionId="some-id">
-          <div id="mainContent" style={{ width: contentWidth }}>
-            <Routes>
-              <Route path="/" element={<Login />} />
-              <Route path="/user" element={<UserStatus />} />
-              <Route path="/admin" element={<AdminDash />} />
-            </Routes>
-          </div>
-        </SessionProvider>
+        <div id="mainContent" style={{ width: contentWidth }}>
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/user" element={<UserStatus />} />
+            <Route path="/admin" element={<AdminDash />} />
+          </Routes>
+        </div>
       </main>
       <Footer />
-    </>
+    </SessionProvider>
   );
-  //   return (
-  //     <div id="app">
-  //       <Header />
-
-  //       <main>
-  //
-  <LoginButton
-    oidcIssuer="https://inrupt.net"
-    redirectUrl="https://localhost:3000/"
-  />;
-  //         </SessionProvider>
-  //       </main>
-
-  //       <footer>footer</footer>
-  //     </div>
-  //   );
 }

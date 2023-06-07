@@ -2,6 +2,7 @@ import React from "react";
 import useWindowSize from "../js/useWindowSize";
 import useResponsiveWidth from "../js/useResponsiveWidth";
 import { NavLink } from "react-router-dom";
+import { LogoutButton } from "@inrupt/solid-ui-react";
 
 const ActiveNavLink = (props) => {
   return (
@@ -20,22 +21,38 @@ export default function Header() {
 
   return (
     <header>
-      <div id="headerContent" style={{ width: contentWidth }}>
+      <div
+        id="headerContent"
+        style={{
+          width: contentWidth,
+          fontSize: contentWidth <= 525 ? "1rem" : "1.25rem",
+        }}
+      >
         <div
           style={{
-            padding: "10px 20px",
+            padding: "0px 20px",
             userSelect: "none",
             backgroundColor: "white",
             color: "#354866",
+            display: "flex",
+            alignItems: "center",
+            height: "100%",
           }}
         >
-          Thesis Project
+          {contentWidth <= 525 ? "Thesis" : "Thesis Project"}
         </div>
+
         <div id="headerContentMain">
           {/* <ActiveNavLink to="/admin">Admin</ActiveNavLink>
           <ActiveNavLink to="/user">User</ActiveNavLink> */}
         </div>
-        <ActiveNavLink to="/">Login</ActiveNavLink>
+        <LogoutButton>
+          <button
+            style={{ fontSize: contentWidth <= 525 ? "0.75rem" : "1rem" }}
+          >
+            Logout
+          </button>
+        </LogoutButton>
       </div>
     </header>
   );
