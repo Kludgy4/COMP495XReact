@@ -1,8 +1,9 @@
+import { LogoutButton, useSession } from "@inrupt/solid-ui-react";
+import { NavLink, useNavigate } from "react-router-dom";
 import React from "react";
-import useWindowSize from "../js/useWindowSize";
+import { sessionLoggedIn } from "../js/helper";
 import useResponsiveWidth from "../js/useResponsiveWidth";
-import { NavLink } from "react-router-dom";
-import { LogoutButton } from "@inrupt/solid-ui-react";
+import useWindowSize from "../js/useWindowSize";
 
 const ActiveNavLink = (props) => {
   return (
@@ -18,6 +19,10 @@ const ActiveNavLink = (props) => {
 export default function Header() {
   const [width, height] = useWindowSize();
   const contentWidth = useResponsiveWidth(width);
+
+  const navigate = useNavigate();
+
+  const { session } = useSession();
 
   return (
     <header>
@@ -46,13 +51,15 @@ export default function Header() {
           {/* <ActiveNavLink to="/admin">Admin</ActiveNavLink>
           <ActiveNavLink to="/user">User</ActiveNavLink> */}
         </div>
-        <LogoutButton>
-          <button
-            style={{ fontSize: contentWidth <= 525 ? "0.75rem" : "1rem" }}
-          >
-            Logout
-          </button>
-        </LogoutButton>
+        {sessionLoggedIn(session) && (
+          <LogoutButton onLogout={() => navigate("/")}>
+            <button
+              style={{ fontSize: contentWidth <= 525 ? "0.75rem" : "1rem" }}
+            >
+              Logout
+            </button>
+          </LogoutButton>
+        )}
       </div>
     </header>
   );

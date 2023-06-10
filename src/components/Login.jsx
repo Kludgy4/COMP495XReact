@@ -1,16 +1,16 @@
-import { LoginButton, useSession } from "@inrupt/solid-ui-react";
-import useWindowSize from "../js/useWindowSize";
-import useResponsiveWidth from "../js/useResponsiveWidth";
-import Card from "@mui/material/Card";
 import { CardActions, CardContent, CardHeader } from "@mui/material";
-import TextField from "@mui/material/TextField";
+import { LoginButton, useSession } from "@inrupt/solid-ui-react";
+import Card from "@mui/material/Card";
 import React from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import TextField from "@mui/material/TextField";
+import { sessionLoggedIn } from "../js/helper";
+import { useNavigate } from "react-router-dom";
+import useResponsiveWidth from "../js/useResponsiveWidth";
+import useWindowSize from "../js/useWindowSize";
 
 export default function Login() {
   const [width, height] = useWindowSize();
   const contentWidth = useResponsiveWidth(width);
-  const location = useLocation();
   const navigate = useNavigate();
 
   const [oidcIssuer, setOidcIssuer] = React.useState("");
@@ -21,15 +21,20 @@ export default function Login() {
     setOidcIssuer(event.target.value);
   };
 
-  const { session, sessionRequestInProgress, fetch, login, logout } =
-    useSession();
+  const { session } = useSession();
 
   React.useEffect(() => {
-    if (!sessionRequestInProgress && session.info.isLoggedIn) {
-      navigate("/admin");
+    if (sessionLoggedIn(session)) {
+      console.log(session);
+      navigate("/user");
     }
-    // console.log(session.info.isLoggedIn);
-  }, [session]);
+    console.log(session.info.isLoggedIn);
+  }, [
+    session,
+    session.info.isLoggedIn,
+    session.tokenRequestInProgress,
+    navigate,
+  ]);
 
   return (
     <div
@@ -51,9 +56,10 @@ export default function Login() {
         }}
       >
         <CardHeader title="Thesis Login" />
+
         <CardContent style={{ height: "100%" }}>
           <TextField
-            id="outlined-basic"
+            id="idprovider-textbox"
             label="Solid ID Provider"
             onChange={textChange}
             placeholder="https://login.inrupt.com/"
@@ -61,6 +67,8 @@ export default function Login() {
             variant="outlined"
             error={invalidOidc}
             helperText={invalidOidc ? "Invalid Provider" : ""}
+            fullWidth
+            name="username"
           />
         </CardContent>
         <CardActions style={{ display: "flex", flexDirection: "row-reverse" }}>

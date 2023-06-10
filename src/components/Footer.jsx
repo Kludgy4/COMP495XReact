@@ -1,7 +1,6 @@
 import React from "react";
-import useWindowSize from "../js/useWindowSize";
 import useResponsiveWidth from "../js/useResponsiveWidth";
-import { NavLink } from "react-router-dom";
+import useWindowSize from "../js/useWindowSize";
 
 export default function Header() {
   const [width, height] = useWindowSize();

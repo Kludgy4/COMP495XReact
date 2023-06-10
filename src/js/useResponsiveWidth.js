@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { BinarySearchTree } from "./breakpointsTree";
 
 const breakpoints = BinarySearchTree.fromObject({
