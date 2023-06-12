@@ -1,3 +1,4 @@
+import React from "react";
 import useResponsiveWidth from "../js/useResponsiveWidth";
 import useWindowSize from "../js/useWindowSize";
 
