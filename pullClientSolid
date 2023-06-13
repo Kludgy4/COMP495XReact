@@ -1,0 +1,8 @@
+#!/usr/bin/bash
+
+cd ~/ClientSolid
+
+sudo systemctl stop client-solid.service
+git pull
+npm install
+sudo systemctl start client-solid.service
