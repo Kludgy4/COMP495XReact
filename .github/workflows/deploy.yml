@@ -17,6 +17,6 @@ jobs:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
-        key: ${{ secrets.KEY }}
+        # key: ${{ secrets.KEY }}
         port: ${{ secrets.PORT }}
         script: ~/ClientSolid/pullClientSolid
