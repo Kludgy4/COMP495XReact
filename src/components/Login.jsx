@@ -1,5 +1,6 @@
-import { CardActions, CardContent, CardHeader } from "@mui/material";
+import { CardActions, CardContent, CardHeader, Typography } from "@mui/material";
 import { LoginButton, useSession } from "@inrupt/solid-ui-react";
+import { getResourceInfo, isContainer } from "@inrupt/solid-client";
 import Card from "@mui/material/Card";
 import React from "react";
 import TextField from "@mui/material/TextField";
@@ -8,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import useResponsiveWidth from "../js/useResponsiveWidth";
 import useWindowSize from "../js/useWindowSize";
 
-export default function Login() {
+export default function Login({ podURL, setPodURL }) {
   const [width, height] = useWindowSize();
   const contentWidth = useResponsiveWidth(width);
   const navigate = useNavigate();
@@ -16,25 +17,50 @@ export default function Login() {
   const [oidcIssuer, setOidcIssuer] = React.useState("");
   const [invalidOidc, setInvalidOidc] = React.useState(false);
 
+  const [tempPodURL, setTempPodURL] = React.useState("");
+  const [invalidTempPodURL, setInvalidTempPodURL] = React.useState(false);
+
   const textChange = (event) => {
     setInvalidOidc(false);
     setOidcIssuer(event.target.value);
   };
 
-  const { session } = useSession();
+  const podChange = (event) => {
+    setInvalidTempPodURL(false);
+    setTempPodURL(event.target.value);
+  };
+
+  const submitPod = async (event) => {
+    event.preventDefault();
+    console.log(`Check if following pod is valid ${tempPodURL}`);
+    try {
+      const info = await getResourceInfo(tempPodURL, { fetch: session.fetch });
+      if (isContainer(info)) {
+        setPodURL(tempPodURL);
+      }
+    } catch (e) {
+      setInvalidTempPodURL(true);
+    }
+  };
+
+  const { session, sessionRequestInProgress } = useSession();
+  const [webidConnected, setWebidConnected] = React.useState(false);
 
   React.useEffect(() => {
-    if (sessionLoggedIn(session)) {
+    if (sessionLoggedIn(session, sessionRequestInProgress)) {
+      setWebidConnected(true);
+    } else {
+      setWebidConnected(false);
+    }
+  }, [session, session.info.isLoggedIn, sessionRequestInProgress]);
+
+  React.useEffect(() => {
+    if (webidConnected && podURL !== "") {
       console.log(session);
-      navigate("/user");
+      navigate("/versionhub");
     }
     console.log(session.info.isLoggedIn);
-  }, [
-    session,
-    session.info.isLoggedIn,
-    session.tokenRequestInProgress,
-    navigate,
-  ]);
+  }, [webidConnected, podURL]);
 
   return (
     <div
@@ -43,45 +69,69 @@ export default function Login() {
         alignItems: "center",
         justifyContent: "center",
         height: "100%",
+        width: "100%"
       }}
     >
       <Card
         style={{
-          width: contentWidth >= 325 ? 325 : "100%",
+          width: contentWidth >= 525 ? 525 : "100%",
+          height: contentWidth >= 525 ? "auto" : "100%",
           // height: contentWidth >= 525 ? 525 : "100%",
           display: "flex",
           flexDirection: "column",
           padding: "16px",
-          height: "230px",
         }}
+        variant="outlined"
       >
-        <CardHeader title="Thesis Login" />
+        <CardHeader title={webidConnected ? "Connect Pod" : "WebID Login"} />
 
         <CardContent style={{ height: "100%" }}>
           <TextField
             id="idprovider-textbox"
-            label="Solid ID Provider"
+            name="username"
+            fullWidth
             onChange={textChange}
             placeholder="https://login.inrupt.com/"
             value={oidcIssuer}
-            variant="outlined"
+            variant={webidConnected ? "filled" : "outlined"}
             error={invalidOidc}
             helperText={invalidOidc ? "Invalid Provider" : ""}
-            fullWidth
+            label={webidConnected ? session.info.webId : "Solid ID Provider"}
+            disabled={webidConnected}
+            style={{ marginBottom: "12px" }}
+          />
+          <TextField
+            id="podurl-textbox"
             name="username"
+            fullWidth
+            onChange={podChange}
+            placeholder="https://mypod.provider/"
+            value={tempPodURL}
+            variant={podURL !== "" ? "filled" : "outlined"}
+            error={invalidTempPodURL}
+            helperText={invalidTempPodURL ? "Invalid Pod URL" : ""}
+            label={podURL !== "" ? "" : "Pod URL"}
+            disabled={podURL !== ""}
+            style={webidConnected ? {} : { display: "none" }}
           />
         </CardContent>
         <CardActions style={{ display: "flex", flexDirection: "row-reverse" }}>
-          <LoginButton
-            // oidcIssuer="https://inrupt.net"
-            oidcIssuer={oidcIssuer}
-            redirectUrl={window.location.href}
-            onError={() => setInvalidOidc(true)}
-          >
-            <button>Login</button>
-          </LoginButton>
+          {webidConnected ?
+            podURL !== "" ?
+              <Typography variant="h6">Connected</Typography> :
+              <button onClick={submitPod}>Connect</button> :
+            <LoginButton
+              // oidcIssuer="https://inrupt.net"
+              oidcIssuer={oidcIssuer}
+              redirectUrl={window.location.href}
+              onError={() => setInvalidOidc(true)}
+            >
+              <button>{webidConnected ? "Connect" : "Login"}</button>
+            </LoginButton>
+          }
+
         </CardActions>
       </Card>
-    </div>
+    </div >
   );
 }

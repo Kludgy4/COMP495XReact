@@ -1,47 +1,49 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import AdminDash from "./components/AdminDash";
-import Footer from "./components/Footer";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
 import Header from "./components/Header";
 import Login from "./components/Login";
 import React from "react";
 import { SessionProvider } from "@inrupt/solid-ui-react";
 import { SnackbarProvider } from "notistack";
-import UserStatus from "./components/UserStatus";
+import VersionHub from "./components/VersionHub";
 import { useSession } from "@inrupt/solid-ui-react";
 
+
+const darkTheme = createTheme({
+  palette: {
+    mode: "dark",
+  },
+});
+
 export default function App() {
+  // TODO: Change this to somehow use useContext to pass podURL around efficiently
+  const [podURL, setPodURL] = React.useState("");
   return (
-    <SessionProvider sessionId="session" restorePreviousSession={true}>
-      <SnackbarProvider autoHideDuration={5000} />
-      <Header />
-      <main>
-        <AppRoutes />
-      </main>
-      <Footer />
-    </SessionProvider>
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
+      <SessionProvider sessionId="session" restorePreviousSession={true}>
+        <SnackbarProvider autoHideDuration={5000} />
+        <Header podURL={podURL} setPodURL={setPodURL} />
+        <main>
+          <AppRoutes podURL={podURL} setPodURL={setPodURL} />
+        </main>
+      </SessionProvider>
+    </ThemeProvider>
   );
 }
 
-const AppRoutes = () => {
+const AppRoutes = ({ podURL, setPodURL }) => {
   const { session, sessionRequestInProgress } = useSession();
+
   return (
     <Routes>
-      <Route path="/" element={<Login />} />
+      <Route path="/" element={<Login podURL={podURL} setPodURL={setPodURL} />} />
       <Route
-        path="/user"
+        path="/versionhub"
         element={
-          !sessionRequestInProgress && session.info.isLoggedIn ? (
-            <UserStatus />
-          ) : (
-            <Navigate replace to={"/"} />
-          )
-        }
-      />
-      <Route
-        path="/admin"
-        element={
-          !sessionRequestInProgress && session.info.isLoggedIn ? (
-            <AdminDash />
+          !sessionRequestInProgress && session.info.isLoggedIn && podURL !== null ? (
+            <VersionHub podURL={podURL} setPodURL={setPodURL} />
           ) : (
             <Navigate replace to={"/"} />
           )

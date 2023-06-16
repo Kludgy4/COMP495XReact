@@ -1,66 +1,42 @@
+import { AppBar, Box, Button, IconButton, Toolbar, Typography } from "@mui/material";
 import { LogoutButton, useSession } from "@inrupt/solid-ui-react";
-import { NavLink, useNavigate } from "react-router-dom";
 import React from "react";
 import { sessionLoggedIn } from "../js/helper";
-import useResponsiveWidth from "../js/useResponsiveWidth";
-import useWindowSize from "../js/useWindowSize";
+import { useNavigate } from "react-router-dom";
 
-const ActiveNavLink = (props) => {
-  return (
-    <NavLink
-      className={({ isActive }) => {
-        return isActive ? "headerButtonActive" : "headerButton";
-      }}
-      {...props}
-    />
-  );
-};
-
-export default function Header() {
-  const [width, height] = useWindowSize();
-  const contentWidth = useResponsiveWidth(width);
+export default function Header({ podURL, setPodURL }) {
 
   const navigate = useNavigate();
 
   const { session } = useSession();
 
   return (
-    <header>
-      <div
-        id="headerContent"
-        style={{
-          width: contentWidth,
-          fontSize: contentWidth <= 525 ? "1rem" : "1.25rem",
-        }}
-      >
-        <div
-          style={{
-            padding: "0px 20px",
-            userSelect: "none",
-            backgroundColor: "white",
-            color: "#354866",
-            display: "flex",
-            alignItems: "center",
-            height: "100%",
-          }}
+    <AppBar component="nav" position="sticky">
+      <Toolbar>
+        <Typography
+          variant="h6"
+          component="div"
+          // sx={{ flexGrow: 1, display: { xs: "none", sm: "block" } }}
+          sx={{ flexGrow: 1 }}
         >
-          {contentWidth <= 525 ? "Thesis" : "Thesis Project"}
-        </div>
+          Solid Versioner
+        </Typography>
+        {/* <Box sx={{ display: { xs: "none", sm: "block" } }}> */}
+        <Box sx={{
+          display: "flex", gap: "12px"
+        }}>
+          {podURL !== "" && (
+            <Button onClick={() => setPodURL("")} variant="outlined">Disconnect Pod</Button>
+          )
+          }
 
-        <div id="headerContentMain">
-          {/* <ActiveNavLink to="/admin">Admin</ActiveNavLink>
-          <ActiveNavLink to="/user">User</ActiveNavLink> */}
-        </div>
-        {sessionLoggedIn(session) && (
-          <LogoutButton onLogout={() => navigate("/")}>
-            <button
-              style={{ fontSize: contentWidth <= 525 ? "0.75rem" : "1rem" }}
-            >
-              Logout
-            </button>
-          </LogoutButton>
-        )}
-      </div>
-    </header>
+          {sessionLoggedIn(session) && (
+            <LogoutButton onLogout={() => { setPodURL(""); navigate("/"); }}>
+              <Button variant="contained">Logout</Button>
+            </LogoutButton>
+          )}
+        </Box>
+      </Toolbar>
+    </AppBar >
   );
 }
