@@ -47,8 +47,8 @@ export default function VersionHub({ podURL, setPodURL }) {
   return (
     <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column" }}>
       <div id="mainContent">
-        <Paper className="left" square style={{ width: leftWidth, height: "100%", display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-          <Typography>Hierarchy</Typography>
+        <Paper className="left" square style={{ width: leftWidth, height: "100%", display: "flex", flexDirection: "column", alignItems: "flex-start", overflow: "auto" }}>
+          <Typography style={{ width: "100%", padding: "8px", fontWeight: "bold" }}>Hierarchy</Typography>
           <TreeView
             defaultCollapseIcon={<ExpandMoreIcon />}
             defaultExpandIcon={<ChevronRightIcon />}
