@@ -1,22 +1,25 @@
 import { CardActions, CardContent, CardHeader, Typography } from "@mui/material";
 import { LoginButton, useSession } from "@inrupt/solid-ui-react";
+import React, { useContext } from "react";
 import { getResourceInfo, isContainer } from "@inrupt/solid-client";
 import Card from "@mui/material/Card";
-import React from "react";
+import { PodContext } from "../context/PodContext";
 import TextField from "@mui/material/TextField";
 import { sessionLoggedIn } from "../js/helper";
 import { useNavigate } from "react-router-dom";
 import useResponsiveWidth from "../js/useResponsiveWidth";
 import useWindowSize from "../js/useWindowSize";
 
-export default function Login({ podURL, setPodURL }) {
+export default function Login() {
+  const navigate = useNavigate();
+
   const [width, height] = useWindowSize();
   const contentWidth = useResponsiveWidth(width);
-  const navigate = useNavigate();
 
   const [oidcIssuer, setOidcIssuer] = React.useState("");
   const [invalidOidc, setInvalidOidc] = React.useState(false);
 
+  const { podURL, setPodURL } = useContext(PodContext);
   const [tempPodURL, setTempPodURL] = React.useState("");
   const [invalidTempPodURL, setInvalidTempPodURL] = React.useState(false);
 
@@ -55,7 +58,7 @@ export default function Login({ podURL, setPodURL }) {
   }, [session, session.info.isLoggedIn, sessionRequestInProgress]);
 
   React.useEffect(() => {
-    if (webidConnected && podURL !== "") {
+    if (webidConnected && podURL !== null) {
       console.log(session);
       navigate("/versionhub");
     }
@@ -107,17 +110,17 @@ export default function Login({ podURL, setPodURL }) {
             onChange={podChange}
             placeholder="https://mypod.provider/"
             value={tempPodURL}
-            variant={podURL !== "" ? "filled" : "outlined"}
+            variant={podURL !== null ? "filled" : "outlined"}
             error={invalidTempPodURL}
             helperText={invalidTempPodURL ? "Invalid Pod URL" : ""}
-            label={podURL !== "" ? "" : "Pod URL"}
-            disabled={podURL !== ""}
+            label={podURL !== null ? "" : "Pod URL"}
+            disabled={podURL !== null}
             style={webidConnected ? {} : { display: "none" }}
           />
         </CardContent>
         <CardActions style={{ display: "flex", flexDirection: "row-reverse" }}>
           {webidConnected ?
-            podURL !== "" ?
+            podURL !== null ?
               <Typography variant="h6">Connected</Typography> :
               <button onClick={submitPod}>Connect</button> :
             <LoginButton

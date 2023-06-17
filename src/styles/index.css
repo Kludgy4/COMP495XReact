@@ -47,17 +47,6 @@ main {
   justify-content: center;
 }
 
-#mainContent {
-  display: flex;
-  height: 100%;
-  flex-direction: row;
-}
-
-.bottom {
-  resize: vertical;
-  overflow: auto;
-}
-
 button, input[type=submit] {
   vertical-align: middle;
   text-align: center;
@@ -92,4 +81,44 @@ footer {
   display: flex;
   flex-direction: column;
   height: 100%;
+}
+
+/* Main App */
+
+#mainContent {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+#podContent {
+  display: flex;
+  height: 100%;
+  flex-direction: row;
+}
+
+.left, .middle, .right {
+  overflow: auto;
+}
+
+.left {
+  height: 100%;
+  
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.middle {
+  padding: 12px;
+  /* height: 100%; */
+  max-height: inherit;
+  white-space: pre;
+  user-select: none;
+  overflow: auto;
+}
+
+.bottom {
+  min-height: 64px;
 }

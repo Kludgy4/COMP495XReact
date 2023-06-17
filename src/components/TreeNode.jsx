@@ -1,6 +1,7 @@
-import { getContainedResourceUrlAll, getSolidDataset, getSourceUrl, isContainer } from "@inrupt/solid-client";
+import React, { useContext } from "react";
+import { getContainedResourceUrlAll, getContentType, getFile, getSolidDataset, getSourceUrl, isContainer } from "@inrupt/solid-client";
 import { Article } from "@mui/icons-material";
-import React from "react";
+import { RequestContext } from "../context/RequestContext";
 import TreeItem from "@mui/lab/TreeItem";
 import { useSession } from "@inrupt/solid-ui-react";
 
@@ -10,6 +11,7 @@ export default function TreeNode({ resourceURL }) {
   const [isLoading, setIsLoading] = React.useState(true);
 
   const { session, sessionRequestInProgress } = useSession();
+  const { setBlob, setHeaders } = useContext(RequestContext);
 
   const getContainerData = async (containerName) => {
     const data = await getSolidDataset(containerName, { fetch: session.fetch });
@@ -21,7 +23,16 @@ export default function TreeNode({ resourceURL }) {
   };
 
   const getFileData = async (url) => {
-    console.log("TODO: Retrieve request data and store/display centrally (context?)");
+    // const supportedType = [
+    //   "text/*",
+    // ];
+    // https://docs.inrupt.com/developer-tools/api/javascript/solid-client/modules/resource_file.html
+    const fileBlob = await getFile(url, { fetch: session.fetch });
+    // console.log("TODO: Retrieve request data and store/display centrally (context?)");
+    const contentType = getContentType(fileBlob);
+    if (contentType !== null && contentType.toLowerCase().includes("text")) {
+      setBlob(fileBlob);
+    }
   };
 
   const fetchResource = async () => {
