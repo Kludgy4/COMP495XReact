@@ -3,14 +3,33 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Paper from "@mui/material/Paper";
 import React from "react";
 import TreeItem from "@mui/lab/TreeItem";
+import TreeNode from "./TreeNode";
 import TreeView from "@mui/lab/TreeView";
 import Typography from "@mui/material/Typography";
+import fileClient from "solid-file-client";
 import { useNavigate } from "react-router-dom";
+import { useSession } from "@inrupt/solid-ui-react";
 import useWindowSize from "../js/useWindowSize";
 
-export default function Login({ podURL, setPodURL }) {
+export default function VersionHub({ podURL, setPodURL }) {
 
+  const { session, sessionRequestInProgress } = useSession();
   const navigate = useNavigate();
+
+
+
+  // return resources.map(async (r) => {
+  //   if (isContainer(r)) {
+  //     const containerData = await getContainerData(r);
+  //     return containerData;
+  //   }
+  //   return r;
+  // });
+  // const  = await getLinkedResourceUrlAll(data);
+
+  // console.log("getting data from " + podURL);
+  // console.log(resources);
+  // };
 
   React.useEffect(() => {
     if (podURL === "") {
@@ -34,6 +53,12 @@ export default function Login({ podURL, setPodURL }) {
             defaultCollapseIcon={<ExpandMoreIcon />}
             defaultExpandIcon={<ChevronRightIcon />}
           >
+            <TreeNode resourceURL={podURL} />
+          </TreeView>
+          {/* <TreeView
+            defaultCollapseIcon={<ExpandMoreIcon />}
+            defaultExpandIcon={<ChevronRightIcon />}
+          >
             <TreeItem nodeId="1" label="Applications">
               <TreeItem nodeId="2" label="Calendar" />
             </TreeItem>
@@ -43,7 +68,7 @@ export default function Login({ podURL, setPodURL }) {
                 <TreeItem nodeId="8" label="index.js" />
               </TreeItem>
             </TreeItem>
-          </TreeView>
+          </TreeView> */}
 
         </Paper>
         <Paper className="middle" square style={{ width: middleWidth, height: "100%" }} elevation={0}></Paper>
