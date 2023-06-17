@@ -21,8 +21,7 @@ export default function TreeNode({ resourceURL }) {
   };
 
   const getFileData = async (url) => {
-    console.log("actually get the file data with a request somehow and store centrally (context?)");
-    // return { url: r, data: null, isFolder: true };
+    console.log("TODO: Retrieve request data and store/display centrally (context?)");
   };
 
   const fetchResource = async () => {

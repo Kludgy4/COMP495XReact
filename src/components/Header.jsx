@@ -26,13 +26,13 @@ export default function Header({ podURL, setPodURL }) {
           display: "flex", gap: "12px"
         }}>
           {podURL !== "" && (
-            <Button onClick={() => setPodURL("")} variant="outlined">Disconnect Pod</Button>
+            <Button onClick={() => setPodURL("")} color="secondary" variant="outlined">Disconnect Pod</Button>
           )
           }
 
           {sessionLoggedIn(session) && (
             <LogoutButton onLogout={() => { setPodURL(""); navigate("/"); }}>
-              <Button variant="contained">Logout</Button>
+              <Button variant="contained" color="secondary">Logout</Button>
             </LogoutButton>
           )}
         </Box>

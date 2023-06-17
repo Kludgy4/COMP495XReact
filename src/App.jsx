@@ -13,6 +13,10 @@ import { useSession } from "@inrupt/solid-ui-react";
 const darkTheme = createTheme({
   palette: {
     mode: "dark",
+    primary: { main: "#7C4DFF" },
+    secondary: { main: "#DAE0E6" },
+    error: { main: "#D0021B" },
+    warning: { main: "#D0021B" },
   },
 });
 

@@ -1,8 +1,10 @@
+import Button from "@mui/material/Button";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { Commit } from "@mui/icons-material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Paper from "@mui/material/Paper";
 import React from "react";
-import TreeItem from "@mui/lab/TreeItem";
+import TextField from "@mui/material/TextField";
 import TreeNode from "./TreeNode";
 import TreeView from "@mui/lab/TreeView";
 import Typography from "@mui/material/Typography";
@@ -15,21 +17,6 @@ export default function VersionHub({ podURL, setPodURL }) {
 
   const { session, sessionRequestInProgress } = useSession();
   const navigate = useNavigate();
-
-
-
-  // return resources.map(async (r) => {
-  //   if (isContainer(r)) {
-  //     const containerData = await getContainerData(r);
-  //     return containerData;
-  //   }
-  //   return r;
-  // });
-  // const  = await getLinkedResourceUrlAll(data);
-
-  // console.log("getting data from " + podURL);
-  // console.log(resources);
-  // };
 
   React.useEffect(() => {
     if (podURL === "") {
@@ -48,33 +35,36 @@ export default function VersionHub({ podURL, setPodURL }) {
     <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column" }}>
       <div id="mainContent">
         <Paper className="left" square style={{ width: leftWidth, height: "100%", display: "flex", flexDirection: "column", alignItems: "flex-start", overflow: "auto" }}>
-          <Typography style={{ width: "100%", padding: "8px", fontWeight: "bold" }}>Hierarchy</Typography>
+          <Typography style={{ width: "100%", padding: "8px", textDecoration: "underline" }}>Hierarchy</Typography>
           <TreeView
             defaultCollapseIcon={<ExpandMoreIcon />}
             defaultExpandIcon={<ChevronRightIcon />}
           >
             <TreeNode resourceURL={podURL} />
           </TreeView>
-          {/* <TreeView
-            defaultCollapseIcon={<ExpandMoreIcon />}
-            defaultExpandIcon={<ChevronRightIcon />}
-          >
-            <TreeItem nodeId="1" label="Applications">
-              <TreeItem nodeId="2" label="Calendar" />
-            </TreeItem>
-            <TreeItem nodeId="5" label="Documents">
-              <TreeItem nodeId="10" label="OSS" />
-              <TreeItem nodeId="6" label="MUI">
-                <TreeItem nodeId="8" label="index.js" />
-              </TreeItem>
-            </TreeItem>
-          </TreeView> */}
-
         </Paper>
-        <Paper className="middle" square style={{ width: middleWidth, height: "100%" }} elevation={0}></Paper>
-        <div className="right" style={{ width: rightWidth, height: "100%" }}></div>
+        <Paper className="middle" square style={{ width: middleWidth, height: "100%" }} elevation={0}>
+          file
+        </Paper>
+        <div className="right" style={{ width: rightWidth, height: "100%" }}>
+          <Typography style={{ width: "100%", padding: "8px", textDecoration: "underline" }}>Headers</Typography>
+          <div id="headersContent" style={{ width: "100%", overflow: "auto" }}>
+
+          </div>
+        </div>
       </div>
-      <Paper className="bottom" style={{ height: bottomHeight }} elevation={2}></Paper>
+      <Paper className="bottom" style={{ height: bottomHeight, position: "relative" }} elevation={2}>
+        <Button
+          variant="contained"
+          startIcon={<Commit />}
+          disabled={false}
+          size={"small"}
+          style={{ position: "absolute", bottom: 8, right: 8 }}
+          onClick={() => console.log("TODO: Commit new version")}
+        >
+          Commit
+        </Button>
+      </Paper>
     </div >
   );
 }
