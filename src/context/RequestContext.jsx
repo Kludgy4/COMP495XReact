@@ -1,8 +1,10 @@
 import React, { createContext, useState } from "react";
 
 export const RequestContext = createContext({
-  headers: [],
-  setHeaders: (headers) => undefined,
+  response: {},
+  setResponse: (response) => undefined,
+  metadataURL: "",
+  setMetadataURL: (metadata) => undefined,
   fileBlob: new Blob(),
   setBlob: (blob) => undefined,
   body: "",
@@ -10,11 +12,13 @@ export const RequestContext = createContext({
 
 export const RequestContextProvider = ({
   children,
-  initialHeaders = [],
+  initialResponse = {},
+  initialMetadataURL = "",
   initialBlob = new Blob(),
   initialBody = "",
 }) => {
-  const [headers, setHeaders] = useState(initialHeaders);
+  const [response, setResponse] = useState(initialResponse);
+  const [metadataURL, setMetadataURL] = useState(initialMetadataURL);
   const [blob, setBlob] = useState(initialBlob);
   const [body, setBody] = useState(initialBody);
 
@@ -24,11 +28,14 @@ export const RequestContextProvider = ({
   };
 
   React.useEffect(() => { extractBodyText(); }, [blob]);
+  React.useEffect(() => { extractBodyText(); }, [blob]);
 
   return (
     <RequestContext.Provider value={{
-      headers: headers,
-      setHeaders: setHeaders,
+      response: response,
+      setResponse: setResponse,
+      metadataURL: metadataURL,
+      setMetadataURL: setMetadataURL,
       blob: blob,
       setBlob: setBlob,
       body: body

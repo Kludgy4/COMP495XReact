@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import Headers from "./Headers";
+import Headers from "./RequestHeaders";
 import Paper from "@mui/material/Paper";
 import { PodContext } from "../context/PodContext";
 import PodHierarchy from "./PodHierarchy";
