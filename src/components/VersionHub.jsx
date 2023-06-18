@@ -23,12 +23,12 @@ export default function VersionHub() {
 
   const [width, height] = useWindowSize();
 
-  const [leftWidth, setLeftWidth] = React.useState("20%");
-  const [middleWidth, setMiddleWidth] = React.useState("80%");
+  const [leftWidth, setLeftWidth] = React.useState("15%");
+  const [middleWidth, setMiddleWidth] = React.useState("65%");
   const [rightWidth, setRightWidth] = React.useState("20%");
 
   return (
-    <div id="mainContent">
+    <div id="mainContent" style={{ height: "calc(100vh - 64px)" }}>
       <div id="podContent">
         <PodHierarchy width={leftWidth} />
         <ResourceDisplay width={middleWidth} />

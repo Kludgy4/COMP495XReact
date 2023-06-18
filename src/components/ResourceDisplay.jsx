@@ -1,14 +1,37 @@
-import React, { useContext } from "react";
-import { Paper } from "@mui/material";
+import { InputLabel, MenuItem, Paper, Select } from "@mui/material";
+import React, { useContext, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { RequestContext } from "../context/RequestContext";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 export default function ResourceDisplay({ width }) {
   const { body } = useContext(RequestContext);
 
+  const [highlightLanguage, setHighlightLanguage] = useState("turtle");
+
+  const handleLanguageChange = (event) => {
+    setHighlightLanguage(event.target.value);
+  };
+
   return (
     <Paper className="middle" square style={{ width: width }} elevation={0}>
-      <ReactMarkdown>{body}</ReactMarkdown>
+      <div id="languageSelect">
+        <InputLabel id="languageLabel">Language</InputLabel>
+        <Select labelId="languageLabel" label="Language" value={highlightLanguage} onChange={handleLanguageChange} variant="outlined">
+          <MenuItem value={"javascript"}>JavaScript</MenuItem>
+          <MenuItem value={"markdown"}>Markdown</MenuItem>
+          <MenuItem value={"turtle"}>Turtle</MenuItem>
+        </Select>
+      </div>
+      <SyntaxHighlighter
+        id="syntax"
+        language={highlightLanguage}
+        showLineNumbers={true}
+        style={materialDark}
+      >
+        {body}
+      </SyntaxHighlighter>
     </Paper>
   );
 }
