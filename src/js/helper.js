@@ -22,3 +22,7 @@ export const pathToName = (url) => {
 
   return resourceName;
 };
+
+export const versionedInPredicate = "https://client-comp495x.duckdns.org/ns/versionedIn";
+export const hasVersionPredicate = "https://client-comp495x.duckdns.org/ns/hasVersion";
+  

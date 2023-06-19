@@ -14,15 +14,16 @@ import {
   saveSolidDatasetAt,
   setThing
 } from "@inrupt/solid-client";
+import { displayError, hasVersionPredicate, versionedInPredicate } from "../js/helper";
 import LinkHeader from "http-link-header";
 import { PodContext } from "../context/PodContext";
-import { displayError } from "../js/helper";
 import { useSession } from "@inrupt/solid-ui-react";
 
 export const RequestContext = createContext({
   requestResource: async (resourceURL) => { return null; },
   responseHeaders: new Headers(),
   resourceBody: "",
+  metadataURL: "",
   currentVersion: 0,
   versionLocation: ""
 });
@@ -34,7 +35,7 @@ export const RequestContextProvider = ({ children }) => {
   ////////////////////////////////////////////////////////////////////////////////
 
   const { session } = useSession();
-  const [resHeaders, setResHeaders] = useState({ headers: new Headers() });
+  const [resHeaders, setResHeaders] = useState({ headers: new Headers(), url: "" });
   const [resourceBlob, setResourceBlob] = useState(new Blob());
 
   const fetchWrapper = async (resource, options) => {
@@ -103,8 +104,7 @@ export const RequestContextProvider = ({ children }) => {
   const [metadataThing, setMetadataThing] = useState(null);
 
   // Predicates used to version resources in a pod
-  const hasVersionPredicate = "https://client-comp495x.duckdns.org/ns/hasVersion";
-  const versionedInPredicate = "https://client-comp495x.duckdns.org/ns/versionedIn";
+
 
   const fetchResourceMeta = async () => {
     const metaset = await fetchMetadataSet();
@@ -230,6 +230,7 @@ export const RequestContextProvider = ({ children }) => {
       requestResource: requestResource,
       responseHeaders: resHeaders,
       resourceBody: body,
+      metadataURL: metadataURL,
       currentVersion: currentVersion,
       versionLocation: versionLocation
     }}

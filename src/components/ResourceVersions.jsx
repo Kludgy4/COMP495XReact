@@ -1,12 +1,16 @@
 import { Commit, FileDownload } from "@mui/icons-material";
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, TextField, Typography } from "@mui/material";
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState, version } from "react";
+import { buildThing, getFile, getSolidDataset, getThing, overwriteFile, saveFileInContainer, saveSolidDatasetAt, setThing } from "@inrupt/solid-client";
 import Button from "@mui/material/Button";
 import { RequestContext } from "../context/RequestContext";
+import { hasVersionPredicate } from "../js/helper";
+import { useSession } from "@inrupt/solid-ui-react";
 
 export default function ResourceVersions({ width }) {
 
-  const { currentVersion } = useContext(RequestContext);
+  const { session } = useSession();
+  const { requestResource, responseHeaders, currentVersion, metadataURL, versionLocation } = useContext(RequestContext);
 
   const [loadVersion, setLoadVersion] = useState(1);
   const [loadVersionError, setLoadVersionError] = useState(false);
@@ -21,14 +25,6 @@ export default function ResourceVersions({ width }) {
     }
   };
 
-  const loadResourceVersion = () => {
-    if (loadVersion === "") {
-      setLoadVersionError(true);
-      return;
-    }
-    console.log(`TODO: Load resource version ${loadVersion}`);
-  };
-
   const [openShouldCommit, setOpenShouldCommit] = React.useState(false);
   const promptShouldCommit = () => {
     setOpenShouldCommit(true);
@@ -39,9 +35,26 @@ export default function ResourceVersions({ width }) {
     if (shouldCommit) commitVersion();
   };
 
-  const commitVersion = () => {
-    // const currFile = await getFile();
-    console.log("TODO: Commit new version");
+  const loadResourceVersion = () => {
+    if (loadVersion === "") {
+      setLoadVersionError(true);
+      return;
+    }
+    console.log(`TODO: Load resource version ${loadVersion}`);
+  };
+
+  const commitVersion = async () => {
+    // Version file using linked versioning folder
+    const currFile = await getFile(responseHeaders.url, { fetch: session.fetch });
+    saveFileInContainer(versionLocation, currFile, { slug: currentVersion.toString(), fetch: session.fetch });
+
+    // Update metadata of file to reflect new version
+    let metaset = await getSolidDataset(metadataURL, { fetch: session.fetch });
+    let metathing = getThing(metaset, responseHeaders.url);
+    metathing = buildThing(metathing).setInteger(hasVersionPredicate, currentVersion + 1).build();
+    metaset = setThing(metaset, metathing);
+    await saveSolidDatasetAt(metadataURL, metaset, { fetch: session.fetch });
+    requestResource(responseHeaders.url);
   };
 
   // React.useEffect(() => {
@@ -71,6 +84,7 @@ export default function ResourceVersions({ width }) {
           size="small"
           error={loadVersionError}
           helperText={loadVersionError ? `Load Version must be between 1 and ${currentVersion}` : ""}
+          fullWidth
         />
         <Button
           variant="outlined"
