@@ -1,11 +1,11 @@
 import React, { useContext } from "react";
-import Headers from "./RequestHeaders";
 import Paper from "@mui/material/Paper";
 import { PodContext } from "../context/PodContext";
 import PodHierarchy from "./PodHierarchy";
 import { RequestContext } from "../context/RequestContext";
+import RequestHeaders from "./RequestHeaders";
 import ResourceDisplay from "./ResourceDisplay";
-import ResourceTimeline from "./ResourceVersions";
+import ResourceVersions from "./ResourceVersions";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "@inrupt/solid-ui-react";
@@ -31,10 +31,10 @@ export default function VersionHub() {
     <div id="mainContent" style={{ height: "calc(100vh - 64px)" }}>
       <div id="podContent">
         <PodHierarchy width={leftWidth} />
-        <Headers width={rightWidth} />
+        <ResourceVersions width={rightWidth} />
         <ResourceDisplay width={middleWidth} />
       </div>
-      <ResourceTimeline />
+      <RequestHeaders />
     </div >
   );
 }

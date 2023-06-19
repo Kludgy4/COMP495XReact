@@ -42,7 +42,6 @@ export default function TreeNode({ resourceURL }) {
     const metaURL = linkParsed.rel("describedby")[0].uri;
     setMetadataURL(metaURL);
 
-
     return fetchData;
   };
 
@@ -91,7 +90,8 @@ export default function TreeNode({ resourceURL }) {
     return resourceName;
   };
 
-  return isContainer(resourceURL) ? (
+  // TODO: .versions string below hides the versions container in the Pod Hierarchy, remove to allow visual
+  return isContainer(resourceURL) ? extractResourceName(resourceURL) !== ".versions" && (
     <TreeItem nodeId={resourceURL} label={extractResourceName(resourceURL)} onClick={getData}>
       <TreeItem nodeId={resourceURL + "temp"} />
       {!isLoading && data.map(r => r)}

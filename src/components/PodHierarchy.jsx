@@ -11,7 +11,7 @@ export default function PodHierarchy({ width }) {
 
   return (
     <Paper square style={{ width: width }} className="podHierarchy">
-      <Typography style={{ width: "100%", padding: "8px", textDecoration: "underline" }}>Hierarchy</Typography>
+      <Typography className="basicHeader" style={{ textDecoration: "underline" }} >Hierarchy</Typography>
       <TreeView defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />}>
         <TreeNode resourceURL={podURL} />
       </TreeView>

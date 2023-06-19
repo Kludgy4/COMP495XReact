@@ -1,6 +1,6 @@
+import { Paper, Typography } from "@mui/material";
 import React, { useContext } from "react";
 import { RequestContext } from "../context/RequestContext";
-import { Typography } from "@mui/material";
 
 const HeadersField = ({ k, v }) => {
   return (
@@ -11,11 +11,11 @@ const HeadersField = ({ k, v }) => {
   );
 };
 
-export default function RequestHeaders({ width }) {
+export default function RequestHeaders() {
   const { response } = useContext(RequestContext);
 
   return (
-    <div className="requestHeaders" style={{ width: width, height: "100%", borderLeft: "3px solid #a1a1aa" }}>
+    <Paper className="requestHeaders" style={{ height: "100%" }} elevation={2}>
       <div id="headersContent" style={{ overflow: "auto", overflowWrap: "normal" }}>
         {"headers" in response ? (<>
           <div className="metasection">
@@ -54,6 +54,6 @@ export default function RequestHeaders({ width }) {
         )}
 
       </div>
-    </div >
+    </Paper >
   );
 }
