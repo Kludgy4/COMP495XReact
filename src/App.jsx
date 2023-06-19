@@ -27,8 +27,8 @@ export default function App() {
   const [podURL, setPodURL] = React.useState("");
 
   return (
-    <RequestContextProvider>
-      <PodContextProvider>
+    <PodContextProvider>
+      <RequestContextProvider>
         <ThemeProvider theme={darkTheme}>
           <CssBaseline />
           <SessionProvider sessionId="session" restorePreviousSession={true}>
@@ -39,8 +39,8 @@ export default function App() {
             </main>
           </SessionProvider>
         </ThemeProvider>
-      </PodContextProvider>
-    </RequestContextProvider>
+      </RequestContextProvider>
+    </PodContextProvider>
   );
 }
 

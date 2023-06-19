@@ -6,7 +6,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 export default function ResourceDisplay({ width }) {
-  const { body } = useContext(RequestContext);
+  const { resourceBody } = useContext(RequestContext);
 
   const [highlightLanguage, setHighlightLanguage] = useState("turtle");
 
@@ -30,7 +30,7 @@ export default function ResourceDisplay({ width }) {
         showLineNumbers={true}
         style={materialDark}
       >
-        {body}
+        {resourceBody}
       </SyntaxHighlighter>
     </Paper>
   );
