@@ -15,7 +15,7 @@ export default function ResourceDisplay({ width }) {
   };
 
   return (
-    <Paper className="middle" square style={{ width: width }} elevation={0}>
+    <Paper className="resourceDisplay" square style={{ width: width }} elevation={0}>
       <div id="languageSelect">
         <InputLabel id="languageLabel">Language</InputLabel>
         <Select labelId="languageLabel" label="Language" value={highlightLanguage} onChange={handleLanguageChange} variant="outlined">

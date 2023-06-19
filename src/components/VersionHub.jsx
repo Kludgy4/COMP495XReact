@@ -5,7 +5,7 @@ import { PodContext } from "../context/PodContext";
 import PodHierarchy from "./PodHierarchy";
 import { RequestContext } from "../context/RequestContext";
 import ResourceDisplay from "./ResourceDisplay";
-import ResourceTimeline from "./ResourceTimeline";
+import ResourceTimeline from "./ResourceVersions";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "@inrupt/solid-ui-react";
@@ -31,8 +31,8 @@ export default function VersionHub() {
     <div id="mainContent" style={{ height: "calc(100vh - 64px)" }}>
       <div id="podContent">
         <PodHierarchy width={leftWidth} />
-        <ResourceDisplay width={middleWidth} />
         <Headers width={rightWidth} />
+        <ResourceDisplay width={middleWidth} />
       </div>
       <ResourceTimeline />
     </div >

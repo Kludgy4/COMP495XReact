@@ -15,7 +15,7 @@ export default function RequestHeaders({ width }) {
   const { response } = useContext(RequestContext);
 
   return (
-    <div className="right" style={{ width: width, height: "100%" }}>
+    <div className="requestHeaders" style={{ width: width, height: "100%", borderLeft: "3px solid #a1a1aa" }}>
       <div id="headersContent" style={{ overflow: "auto", overflowWrap: "normal" }}>
         {"headers" in response ? (<>
           <div className="metasection">
