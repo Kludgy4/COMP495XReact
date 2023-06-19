@@ -1,4 +1,4 @@
-import { Paper, Typography } from "@mui/material";
+import { Button, Paper, Typography } from "@mui/material";
 import React, { useContext } from "react";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -15,6 +15,6 @@ export default function PodHierarchy({ width }) {
       <TreeView defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />}>
         <TreeNode resourceURL={podURL} />
       </TreeView>
-    </Paper>
+    </Paper >
   );
 }

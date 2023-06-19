@@ -1,4 +1,4 @@
-import { Commit, FileDownload } from "@mui/icons-material";
+import { Commit, FileDownload, Refresh } from "@mui/icons-material";
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, TextField, Typography } from "@mui/material";
 import React, { useCallback, useContext, useEffect, useState, version } from "react";
 import { buildThing, getFile, getSolidDataset, getThing, overwriteFile, saveFileInContainer, saveSolidDatasetAt, setThing } from "@inrupt/solid-client";
@@ -86,16 +86,29 @@ export default function ResourceVersions({ width }) {
           helperText={loadVersionError ? `Load Version must be between 1 and ${currentVersion}` : ""}
           fullWidth
         />
-        <Button
-          variant="outlined"
-          color="secondary"
-          startIcon={<FileDownload />}
-          disabled={false}
-          size={"small"}
-          onClick={() => loadResourceVersion()}
-        >
-          Load
-        </Button>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <Button
+            variant="outlined"
+            color="secondary"
+            startIcon={<FileDownload />}
+            disabled={false}
+            size="small"
+            onClick={() => loadResourceVersion()}
+            style={{ flexGrow: 1, flexBasis: 0 }}
+          >
+            Load
+          </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            size="small"
+            style={{ flexGrow: 1, flexBasis: 0 }}
+            startIcon={<Refresh />}
+            onClick={() => requestResource(responseHeaders.url)}
+          >
+            Refresh Preview
+          </Button>
+        </div>
       </>
       ) : (
         <div>No resource selected</div>

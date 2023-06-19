@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import {
   buildThing,
   createContainerAt,
@@ -34,6 +34,9 @@ export const RequestContextProvider = ({ children }) => {
   /////                             Base Request                             /////
   ////////////////////////////////////////////////////////////////////////////////
 
+  // Used to refresh
+  const [resourceURL, setResourceURL] = useState("");
+
   const { session } = useSession();
   const [resHeaders, setResHeaders] = useState({ headers: new Headers(), url: "" });
   const [resourceBlob, setResourceBlob] = useState(new Blob());
@@ -47,6 +50,7 @@ export const RequestContextProvider = ({ children }) => {
       redirected: fetchResource.redirected,
       status: fetchResource.status,
       statusText: fetchResource.statusText,
+      time: Date.now(),
       type: fetchResource.type,
       url: fetchResource.url
     };
@@ -56,10 +60,23 @@ export const RequestContextProvider = ({ children }) => {
     return fetchResource;
   };
 
-  const requestResource = async (url) => {
+  const requestResource = (url) => {
+    if (url !== resourceURL) {
+      // New resource
+      setResourceURL(url);
+    } else {
+      // Refresh resource
+      fetchResource();
+    }
+  };
+
+  // If a new resource is requested, fetch it for display
+  useEffect(() => { if (resourceURL !== "") { fetchResource(); } }, [resourceURL]);
+
+  const fetchResource = async () => {
     // https://docs.inrupt.com/developer-tools/api/javascript/solid-client/modules/resource_file.html
     // custom fetch to extract headers (??????) Edit: YES IT WORKED!!!
-    const fileBlob = await getFile(url, { fetch: fetchWrapper });
+    const fileBlob = await getFile(resourceURL, { fetch: fetchWrapper });
 
     const contentType = getContentType(fileBlob);
     if (contentType !== null && contentType.toLowerCase().includes("text")) {
@@ -78,6 +95,7 @@ export const RequestContextProvider = ({ children }) => {
   // Simple function to extract the returned body of the resource request 
   React.useEffect(() => { extractBodyText(); }, [resourceBlob]);
   const extractBodyText = async () => {
+    console.log("test new blob");
     const text = await resourceBlob.text();
     setBody(text);
   };
@@ -91,9 +109,15 @@ export const RequestContextProvider = ({ children }) => {
     // Extract and set the metadata location from the headers
     const linkHeader = resHeaders.headers.get("link");
     if (linkHeader !== null) {
+      console.log("test new headers");
       const parsedLinks = LinkHeader.parse(linkHeader);
       const metaURL = parsedLinks.rel("describedby")[0].uri;
-      setMetadataURL(metaURL);
+      if (metaURL !== metadataURL) {
+        setMetadataURL(metaURL);
+      } else {
+        fetchResourceMeta();
+      }
+
     }
   }, [resHeaders]);
 
@@ -102,10 +126,6 @@ export const RequestContextProvider = ({ children }) => {
 
   // An inrupt "Thing" (https://docs.inrupt.com/developer-tools/javascript/client-libraries/reference/glossary/#term-Thing)
   const [metadataThing, setMetadataThing] = useState(null);
-
-  // Predicates used to version resources in a pod
-
-
   const fetchResourceMeta = async () => {
     const metaset = await fetchMetadataSet();
     const metathing = getThing(metaset, resHeaders.url);
@@ -126,6 +146,7 @@ export const RequestContextProvider = ({ children }) => {
    * @returns 
    */
   const fetchMetadataSet = async () => {
+    console.log("Getting new metadata");
     let metaset = await getSolidDataset(metadataURL, { fetch: session.fetch });
     const metathing = getThing(metaset, resHeaders.url);
     // Check if the Description Resource is of the expected configuration

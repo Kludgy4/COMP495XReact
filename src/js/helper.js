@@ -23,6 +23,7 @@ export const pathToName = (url) => {
   return resourceName;
 };
 
+// Predicates used to version resources in a pod
 export const versionedInPredicate = "https://client-comp495x.duckdns.org/ns/versionedIn";
 export const hasVersionPredicate = "https://client-comp495x.duckdns.org/ns/hasVersion";
   
