@@ -40,7 +40,7 @@ export default function ResourceVersions({ width }) {
       setLoadVersionError(true);
       return;
     }
-    console.log(`TODO: Load resource version ${loadVersion}`);
+    requestResource(responseHeaders.url, parseInt(loadVersion, 10));
   };
 
   const commitVersion = async () => {
