@@ -38,24 +38,31 @@ export const RequestContextProvider = ({ children }) => {
   const [body, setBody] = useState("");
 
   const fetchResource = async () => {
-
+    // Retrieve base resource  
     if (versionedRequest.version === -1) {
-      // Retrieve base resource  
-      const fileBlob = await getFile(versionedRequest.url, { fetch: fetchWrapper });
+      getFileBody(versionedRequest.url, fetchWrapper);
+    }
+  };
 
-      //
-      const contentType = getContentType(fileBlob);
-      if (contentType !== null && contentType.toLowerCase().includes("text")) {
-        setResourceBlob(fileBlob);
-        setBody(await fileBlob.text());
-      } else {
-        // TODO: Allow file to be downloaded to preview (not in browser app)
-      }
+  const [verLocObj, setVerLocObj] = useState({ versionLocation: "" });
+  React.useEffect(() => {
+    if (versionedRequest.version !== -1 && verLocObj.versionLocation !== "") {
+      const resourceVersionLocation = verLocObj.versionLocation + versionedRequest.version;
+      console.log("Retrieve versioned resource body from " + resourceVersionLocation);
+      getFileBody(resourceVersionLocation, session.fetch);
+    }
+  }, [verLocObj]);
+
+  const getFileBody = async (url, authFetch) => {
+    console.log("Retrieving body");
+    const fileBlob = await getFile(url, { fetch: authFetch });
+    const contentType = getContentType(fileBlob);
+    if (contentType !== null && contentType.toLowerCase().includes("text")) {
+      setResourceBlob(fileBlob);
+      setBody(await fileBlob.text());
     } else {
-      // Retrieve versioned resource
-      // getFile(versionedRequest.url, { fetch: fetchWrapper });
-      // const versionedFileBlob = await getFile(versionedRequest.url, { fetch: session.fetch });
-      console.log("TODO: Retrieve versioned resource");
+      // TODO: Allow nontext file to be downloaded to preview (not in browser app)
+      console.log("other file");
     }
   };
 
@@ -87,7 +94,7 @@ export const RequestContextProvider = ({ children }) => {
       setMetadataThing(null);
       setCurrentVersion(0);
       setVersionLocation("");
-      return;
+      return fetchedResource;
     }
 
     const metathing = getThing(metaset, resource);
@@ -95,15 +102,19 @@ export const RequestContextProvider = ({ children }) => {
 
     // An inrupt "Thing" (https://docs.inrupt.com/developer-tools/javascript/client-libraries/reference/glossary/#term-Thing)
     setMetadataThing(metathing);
-    const hasVersion = getInteger(metathing, hasVersionPredicate);
-    setCurrentVersion(hasVersion === null ? 0 : hasVersion);
-    const versionedIn = getUrl(metathing, versionedInPredicate);
-    setVersionLocation(versionedIn === null ? "" : versionedIn);
+    let hasVersion = getInteger(metathing, hasVersionPredicate);
+    hasVersion = (hasVersion === null ? 0 : hasVersion);
+    setCurrentVersion(hasVersion);
+    let versionedIn = getUrl(metathing, versionedInPredicate);
+    versionedIn = (versionedIn === null ? "" : versionedIn);
+    setVersionLocation(versionedIn);
+    setVerLocObj({ versionLocation: versionedIn });
 
     // Continue returning (as is a wrapper)
     return fetchedResource;
   };
 
+  // TODO: Extract
   const headersToDescResURI = (headers) => {
     const linkHeader = headers.get("link");
 
