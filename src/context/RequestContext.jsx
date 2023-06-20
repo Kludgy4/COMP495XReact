@@ -17,7 +17,8 @@ export const RequestContext = createContext({
   resourceBody: "",
   metadataURL: "",
   currentVersion: 0,
-  versionLocation: ""
+  versionLocation: "",
+  displayVersion: -1
 });
 
 
@@ -36,33 +37,52 @@ export const RequestContextProvider = ({ children }) => {
 
   const [resourceBlob, setResourceBlob] = useState(new Blob());
   const [body, setBody] = useState("");
+  const [displayVersion, setDisplayVersion] = useState(-1);
 
   const fetchResource = async () => {
+
     // Retrieve base resource  
+    const fileBlob = await getFile(versionedRequest.url, { fetch: fetchWrapper });
     if (versionedRequest.version === -1) {
-      getFileBody(versionedRequest.url, fetchWrapper);
+
+      setBlobToBody(fileBlob);
     }
   };
 
-  const [verLocObj, setVerLocObj] = useState({ versionLocation: "" });
-  React.useEffect(() => {
-    if (versionedRequest.version !== -1 && verLocObj.versionLocation !== "") {
-      const resourceVersionLocation = verLocObj.versionLocation + versionedRequest.version;
-      console.log("Retrieve versioned resource body from " + resourceVersionLocation);
-      getFileBody(resourceVersionLocation, session.fetch);
-    }
-  }, [verLocObj]);
+  const [versionMeta, setVersionMeta] = useState({ versionedIn: "", hasVersion: -1 });
 
-  const getFileBody = async (url, authFetch) => {
-    console.log("Retrieving body");
-    const fileBlob = await getFile(url, { fetch: authFetch });
-    const contentType = getContentType(fileBlob);
-    if (contentType !== null && contentType.toLowerCase().includes("text")) {
-      setResourceBlob(fileBlob);
-      setBody(await fileBlob.text());
+  React.useEffect(() => { retrieveVersionedBody(); }, [versionMeta]);
+  const retrieveVersionedBody = async () => {
+
+    // No resource yet (probably on app load)
+    if (versionMeta.versionedIn === "") return;
+
+    // We have queried the latest version, so this function call is invalid
+    if (versionedRequest.version === -1) {
+      setDisplayVersion(versionMeta.hasVersion);
+      return;
+    }
+
+    // Retrieve the requested resource version
+    if (versionMeta.hasVersion === versionedRequest.version) {
+      // base resource instead
+      requestResource(versionedRequest.url);
     } else {
-      // TODO: Allow nontext file to be downloaded to preview (not in browser app)
-      console.log("other file");
+      // Get and display the versioned resource in place of the actual resource
+      const resourceVersionLocation = versionMeta.versionedIn + versionedRequest.version;
+      const fileBlob = await getFile(resourceVersionLocation, { fetch: session.fetch });
+      setBlobToBody(fileBlob);
+      setDisplayVersion(versionedRequest.version);
+    }
+  };
+
+  const setBlobToBody = async (blob) => {
+    const contentType = getContentType(blob);
+    if (contentType !== null && contentType.toLowerCase().includes("text")) {
+      setResourceBlob(blob);
+      setBody(await blob.text());
+    } else {
+      // TODO: Allow nontext blob to be downloaded instead to preview (not in browser app)
     }
   };
 
@@ -108,7 +128,7 @@ export const RequestContextProvider = ({ children }) => {
     let versionedIn = getUrl(metathing, versionedInPredicate);
     versionedIn = (versionedIn === null ? "" : versionedIn);
     setVersionLocation(versionedIn);
-    setVerLocObj({ versionLocation: versionedIn });
+    setVersionMeta({ versionedIn, hasVersion });
 
     // Continue returning (as is a wrapper)
     return fetchedResource;
@@ -133,7 +153,8 @@ export const RequestContextProvider = ({ children }) => {
       resourceBody: body,
       metadataURL: metadataRequest,
       currentVersion: currentVersion,
-      versionLocation: versionLocation
+      versionLocation: versionLocation,
+      displayVersion: displayVersion
     }}
     >
       {children}
