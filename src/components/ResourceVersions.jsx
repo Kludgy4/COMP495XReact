@@ -49,11 +49,12 @@ export default function ResourceVersions({ width }) {
     saveFileInContainer(versionLocation, currFile, { slug: currentVersion.toString(), fetch: session.fetch });
 
     // Update metadata of file to reflect new version
-    let metaset = await getSolidDataset(metadataURL, { fetch: session.fetch });
+    console.log(metadataURL.url);
+    let metaset = await getSolidDataset(metadataURL.url, { fetch: session.fetch });
     let metathing = getThing(metaset, responseHeaders.url);
     metathing = buildThing(metathing).setInteger(hasVersionPredicate, currentVersion + 1).build();
     metaset = setThing(metaset, metathing);
-    await saveSolidDatasetAt(metadataURL, metaset, { fetch: session.fetch });
+    await saveSolidDatasetAt(metadataURL.url, metaset, { fetch: session.fetch });
     requestResource(responseHeaders.url);
   };
 
