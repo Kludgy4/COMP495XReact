@@ -11,7 +11,7 @@ import ScreenVersioning from "./components/ScreenVersioning";
 import ScreenView from "./components/ScreenView";
 import { SessionProvider } from "@inrupt/solid-ui-react";
 import { SnackbarProvider } from "notistack";
-import { useSession } from "@inrupt/solid-ui-react";
+import useAuth from "./js/useAuth";
 
 
 const darkTheme = createTheme({
@@ -25,9 +25,7 @@ const darkTheme = createTheme({
 });
 
 export default function App() {
-  // TODO: Change this to somehow use useContext to pass podURL around efficiently
-  const [podURL, setPodURL] = React.useState("");
-
+  // TODO: Compress PodContextProvider and RequestContextProvider into an "AuthProvider"
   return (
     <PodContextProvider>
       <RequestContextProvider>
@@ -47,40 +45,18 @@ export default function App() {
 }
 
 const AppRoutes = () => {
-  const { session, sessionRequestInProgress } = useSession();
-  const { podURL } = useContext(PodContext);
+  const { loggedIn } = useAuth();
   return (
     <Routes>
       <Route path="/" element={<Login />} />
-      <Route
-        path="/version"
-        element={
-          !sessionRequestInProgress && session.info.isLoggedIn && podURL !== null ? (
-            <ScreenVersioning />
-          ) : (
-            <Navigate replace to={"/"} />
-          )
-        }
+      <Route path="/version"
+        element={loggedIn ? <ScreenVersioning /> : <Navigate replace to={"/"} />}
       />
-      <Route
-        path="/share"
-        element={
-          !sessionRequestInProgress && session.info.isLoggedIn && podURL !== null ? (
-            <ScreenSharing />
-          ) : (
-            <Navigate replace to={"/"} />
-          )
-        }
+      <Route path="/share"
+        element={loggedIn ? <ScreenSharing /> : <Navigate replace to={"/"} />}
       />
-      <Route
-        path="/view"
-        element={
-          !sessionRequestInProgress && session.info.isLoggedIn && podURL !== null ? (
-            <ScreenView />
-          ) : (
-            <Navigate replace to={"/"} />
-          )
-        }
+      <Route path="/view"
+        element={loggedIn ? <ScreenView /> : <Navigate replace to={"/"} />}
       />
     </Routes>
   );

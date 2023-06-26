@@ -64,70 +64,8 @@ export default function ShareResource({ width }) {
 
   return (
     <div className="resourceVersions" style={{ width: width }}>
-      {currentVersion !== 0 ? (<>
-        <Typography className="basicHeader" style={{ textDecoration: "underline" }} >Versions</Typography>
-        <Typography variant="body1">Latest Version: {currentVersion}</Typography>
-        <Button
-          variant="contained"
-          startIcon={<Commit />}
-          disabled={false}
-          size={"small"}
-          onClick={() => promptShouldCommit()}
-        >
-          Commit
-        </Button>
-
-        <Typography variant="body1">Load Version: </Typography>
-        <TextField
-          type="number"
-          onChange={changeLoadVersion}
-          value={loadVersion}
-          size="small"
-          error={loadVersionError}
-          helperText={loadVersionError ? `Load Version must be between 1 and ${currentVersion}` : ""}
-          fullWidth
-        />
-        <div style={{ display: "flex", gap: "8px" }}>
-          <Button
-            variant="outlined"
-            color="secondary"
-            startIcon={<FileDownload />}
-            disabled={false}
-            size="small"
-            onClick={() => loadResourceVersion()}
-            style={{ flexGrow: 1, flexBasis: 0 }}
-          >
-            Load
-          </Button>
-          <Button
-            variant="contained"
-            color="secondary"
-            size="small"
-            style={{ flexGrow: 1, flexBasis: 0 }}
-            startIcon={<Refresh />}
-            onClick={() => requestResource(responseHeaders.url)}
-          >
-            Refresh Preview
-          </Button>
-        </div>
-      </>
-      ) : (
-        <div>No resource selected</div>
-      )}
-      <Dialog
-        open={openShouldCommit}
-        onClose={handleClose}
-      >
-        <DialogTitle >
-          {"Create a new resource version?"}
-        </DialogTitle>
-        <DialogActions>
-          <Button color="secondary" onClick={() => handleClose(false)} autoFocus>No</Button>
-          <Button color="success" onClick={() => handleClose(true)}>
-            Yes
-          </Button>
-        </DialogActions>
-      </Dialog>
+      ShareResource.jsx
+      <Button variant="contained">Share</Button>
     </div >
   );
 }

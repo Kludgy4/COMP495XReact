@@ -25,6 +25,41 @@ header {
   gap: 16px;
 }
 
+.navLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  padding: 8px 16px;
+  transition-duration: 0.2s;
+  width: 92px;
+}
+
+.navLinkCurrent {
+  cursor: default;
+  color: #282828;
+  background-color: rgb(218, 224, 230);
+  font-weight: bold;
+}
+
+.navLinkOther {
+  cursor: pointer;
+  color: rgb(218,224,230);
+  background-color: #282828;
+}
+
+.navLinkOther:hover {
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.3);
+  color: #282828;
+  background-color: rgb(218,224,230);
+}
+
+.navLinkOther:active {
+box-shadow: rgba(0, 0, 0, 0.6) 0px 0px 4px 0px;
+  text-decoration: underline;
+}
+
+
 footer {
   display: flex;
   justify-content: center;

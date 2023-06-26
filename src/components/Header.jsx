@@ -1,9 +1,9 @@
-import { AppBar, Box, Button, IconButton, Toolbar, Typography } from "@mui/material";
+import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LogoutButton, useSession } from "@inrupt/solid-ui-react";
 import React, { useContext } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import { PodContext } from "../context/PodContext";
-import { sessionLoggedIn } from "../js/helper";
+import useAuth from "../js/useAuth";
 
 const pages = [
   { name: "Version", location: "/version" },
@@ -17,12 +17,7 @@ export default function Header() {
   const location = useLocation();
   const { session } = useSession();
   const { podURL, setPodURL } = useContext(PodContext);
-
-  const handleCloseNavMenu = (navLoc) => {
-    if (location.pathname === navLoc) return;
-
-    navigate(navLoc);
-  };
+  const { loggedIn, sessionIn, podIn } = useAuth();
 
   return (
     <AppBar component="nav" position="sticky">
@@ -30,32 +25,32 @@ export default function Header() {
         <Typography
           variant="h6"
           component="div"
+          style={{ marginRight: "24px" }}
         // sx={{ flexGrow: 1, display: { xs: "none", sm: "block" } }}
         >
           Solid Versioner
         </Typography>
+
         <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
-          {pages.map((page) =>
-            <Button
+          {loggedIn && pages.map((page) =>
+            <Link
+              className={page.location === location.pathname ? "navLink navLinkCurrent" : "navLink navLinkOther"}
+              to={page.location}
               key={page.name}
-              onClick={() => handleCloseNavMenu(page.location)}
-              style={page.location === location.pathname ? { cursor: "default", borderRadius: "0", fontWeight: "bold", color: "#282828", backgroundColor: "white" } : { fontWeight: "normal" }}
-              sx={{ color: "white", display: "block" }}
             >
               {page.name}
-            </Button>
+            </Link>
           )}
         </Box>
-        {/* <Box sx={{ display: { xs: "none", sm: "block" } }}> */}
         <Box sx={{
           display: "flex", gap: "12px"
         }}>
-          {podURL !== null && (
+          {podIn && (
             <Button onClick={() => setPodURL(null)} color="secondary" variant="outlined">Disconnect Pod</Button>
           )
           }
 
-          {sessionLoggedIn(session) && (
+          {sessionIn && (
             <LogoutButton onLogout={() => { setPodURL(null); navigate("/"); }}>
               <Button variant="contained" color="secondary">Logout</Button>
             </LogoutButton>
