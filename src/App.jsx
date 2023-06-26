@@ -6,9 +6,11 @@ import CssBaseline from "@mui/material/CssBaseline";
 import Header from "./components/Header";
 import Login from "./components/Login";
 import { RequestContextProvider } from "./context/RequestContext";
+import ScreenSharing from "./components/ScreenSharing";
+import ScreenVersioning from "./components/ScreenVersioning";
+import ScreenView from "./components/ScreenView";
 import { SessionProvider } from "@inrupt/solid-ui-react";
 import { SnackbarProvider } from "notistack";
-import VersionHub from "./components/VersionHub";
 import { useSession } from "@inrupt/solid-ui-react";
 
 
@@ -51,10 +53,30 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<Login />} />
       <Route
-        path="/versionhub"
+        path="/version"
         element={
           !sessionRequestInProgress && session.info.isLoggedIn && podURL !== null ? (
-            <VersionHub />
+            <ScreenVersioning />
+          ) : (
+            <Navigate replace to={"/"} />
+          )
+        }
+      />
+      <Route
+        path="/share"
+        element={
+          !sessionRequestInProgress && session.info.isLoggedIn && podURL !== null ? (
+            <ScreenSharing />
+          ) : (
+            <Navigate replace to={"/"} />
+          )
+        }
+      />
+      <Route
+        path="/view"
+        element={
+          !sessionRequestInProgress && session.info.isLoggedIn && podURL !== null ? (
+            <ScreenView />
           ) : (
             <Navigate replace to={"/"} />
           )

@@ -1,17 +1,12 @@
 import React, { useContext } from "react";
-import Paper from "@mui/material/Paper";
 import { PodContext } from "../context/PodContext";
 import PodHierarchy from "./PodHierarchy";
-import { RequestContext } from "../context/RequestContext";
 import RequestHeaders from "./RequestHeaders";
 import ResourceDisplay from "./ResourceDisplay";
-import ResourceVersions from "./ResourceVersions";
-import Typography from "@mui/material/Typography";
+import ShareResource from "./ShareResource";
 import { useNavigate } from "react-router-dom";
-import { useSession } from "@inrupt/solid-ui-react";
-import useWindowSize from "../js/useWindowSize";
 
-export default function VersionHub() {
+export default function AddrUser() {
   const { podURL } = useContext(PodContext);
   const navigate = useNavigate();
 
@@ -21,8 +16,6 @@ export default function VersionHub() {
     }
   }, [podURL]);
 
-  const [width, height] = useWindowSize();
-
   const [leftWidth, setLeftWidth] = React.useState("15%");
   const [middleWidth, setMiddleWidth] = React.useState("65%");
   const [rightWidth, setRightWidth] = React.useState("20%");
@@ -31,7 +24,7 @@ export default function VersionHub() {
     <div id="mainContent" style={{ height: "calc(100vh - 64px)" }}>
       <div id="podContent">
         <PodHierarchy width={leftWidth} />
-        <ResourceVersions width={rightWidth} />
+        <ShareResource width={rightWidth} />
         <ResourceDisplay width={middleWidth} />
       </div>
       <RequestHeaders />

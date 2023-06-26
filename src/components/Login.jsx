@@ -60,7 +60,7 @@ export default function Login() {
   React.useEffect(() => {
     if (webidConnected && podURL !== null) {
       console.log(session);
-      navigate("/versionhub");
+      navigate("/version");
     }
     console.log(session.info.isLoggedIn);
   }, [webidConnected, podURL]);
