@@ -1,13 +1,13 @@
 import { Commit, FileDownload, Refresh } from "@mui/icons-material";
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, TextField, Typography } from "@mui/material";
-import React, { useCallback, useContext, useEffect, useState, version } from "react";
-import { buildThing, getFile, getSolidDataset, getThing, overwriteFile, saveFileInContainer, saveSolidDatasetAt, setThing } from "@inrupt/solid-client";
+import { Dialog, DialogActions, DialogTitle, TextField, Typography } from "@mui/material";
+import React, { useContext, useState } from "react";
+import { buildThing, getFile, getSolidDataset, getThing, saveFileInContainer, saveSolidDatasetAt, setThing } from "@inrupt/solid-client";
 import Button from "@mui/material/Button";
 import { RequestContext } from "../context/RequestContext";
 import { hasVersionPredicate } from "../js/helper";
 import { useSession } from "@inrupt/solid-ui-react";
 
-export default function ResourceVersions({ width }) {
+export default function ActionVersion() {
 
   const { session } = useSession();
   const { requestResource, responseHeaders, currentVersion, metadataURL, versionLocation } = useContext(RequestContext);
@@ -63,57 +63,50 @@ export default function ResourceVersions({ width }) {
   // }, [metaset]);
 
   return (
-    <div className="resourceVersions" style={{ width: width }}>
-      {currentVersion !== 0 ? (<>
-        <Typography className="basicHeader" style={{ textDecoration: "underline" }} >Versions</Typography>
-        <Typography variant="body1">Latest Version: {currentVersion}</Typography>
+    <>
+      <Typography variant="body1">Latest Version: {currentVersion}</Typography>
+      <Button
+        variant="contained"
+        startIcon={<Commit />}
+        disabled={false}
+        size={"small"}
+        onClick={() => promptShouldCommit()}
+      >
+        Commit
+      </Button>
+      <Typography variant="body1">Load Version: </Typography>
+      <TextField
+        type="number"
+        onChange={changeLoadVersion}
+        value={loadVersion}
+        size="small"
+        error={loadVersionError}
+        helperText={loadVersionError ? `Load Version must be between 1 and ${currentVersion}` : ""}
+        fullWidth
+      />
+      <div style={{ display: "flex", gap: "8px" }}>
+        <Button
+          variant="outlined"
+          color="secondary"
+          startIcon={<FileDownload />}
+          disabled={false}
+          size="small"
+          onClick={() => loadResourceVersion()}
+          style={{ flexGrow: 1, flexBasis: 0 }}
+        >
+          Load
+        </Button>
         <Button
           variant="contained"
-          startIcon={<Commit />}
-          disabled={false}
-          size={"small"}
-          onClick={() => promptShouldCommit()}
-        >
-          Commit
-        </Button>
-
-        <Typography variant="body1">Load Version: </Typography>
-        <TextField
-          type="number"
-          onChange={changeLoadVersion}
-          value={loadVersion}
+          color="secondary"
           size="small"
-          error={loadVersionError}
-          helperText={loadVersionError ? `Load Version must be between 1 and ${currentVersion}` : ""}
-          fullWidth
-        />
-        <div style={{ display: "flex", gap: "8px" }}>
-          <Button
-            variant="outlined"
-            color="secondary"
-            startIcon={<FileDownload />}
-            disabled={false}
-            size="small"
-            onClick={() => loadResourceVersion()}
-            style={{ flexGrow: 1, flexBasis: 0 }}
-          >
-            Load
-          </Button>
-          <Button
-            variant="contained"
-            color="secondary"
-            size="small"
-            style={{ flexGrow: 1, flexBasis: 0 }}
-            startIcon={<Refresh />}
-            onClick={() => requestResource(responseHeaders.url)}
-          >
-            Refresh Preview
-          </Button>
-        </div>
-      </>
-      ) : (
-        <div>No resource selected</div>
-      )}
+          style={{ flexGrow: 1, flexBasis: 0 }}
+          startIcon={<Refresh />}
+          onClick={() => requestResource(responseHeaders.url)}
+        >
+          Refresh Preview
+        </Button>
+      </div>
       <Dialog
         open={openShouldCommit}
         onClose={handleClose}
@@ -128,6 +121,6 @@ export default function ResourceVersions({ width }) {
           </Button>
         </DialogActions>
       </Dialog>
-    </div >
+    </ >
   );
 }

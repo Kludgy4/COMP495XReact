@@ -35,7 +35,7 @@ export default function Login() {
 
   const submitPod = async (event) => {
     event.preventDefault();
-    console.log(`Check if following pod is valid ${tempPodURL}`);
+    // console.log(`Check if following pod is valid ${tempPodURL}`);
     try {
       const info = await getResourceInfo(tempPodURL, { fetch: session.fetch });
       if (isContainer(info)) {

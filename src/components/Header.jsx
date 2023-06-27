@@ -7,7 +7,6 @@ import useAuth from "../js/useAuth";
 
 const pages = [
   { name: "Version", location: "/version" },
-  { name: "Share", location: "/share" },
   { name: "View", location: "/view" },
 ];
 
@@ -15,8 +14,7 @@ export default function Header() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { session } = useSession();
-  const { podURL, setPodURL } = useContext(PodContext);
+  const { setPodURL } = useContext(PodContext);
   const { loggedIn, sessionIn, podIn } = useAuth();
 
   return (
@@ -26,12 +24,11 @@ export default function Header() {
           variant="h6"
           component="div"
           style={{ marginRight: "24px" }}
-        // sx={{ flexGrow: 1, display: { xs: "none", sm: "block" } }}
         >
           Solid Versioner
         </Typography>
 
-        <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
+        <Box sx={{ flexGrow: 1, display: "flex" }}>
           {loggedIn && pages.map((page) =>
             <Link
               className={page.location === location.pathname ? "navLink navLinkCurrent" : "navLink navLinkOther"}
@@ -47,9 +44,7 @@ export default function Header() {
         }}>
           {podIn && (
             <Button onClick={() => setPodURL(null)} color="secondary" variant="outlined">Disconnect Pod</Button>
-          )
-          }
-
+          )}
           {sessionIn && (
             <LogoutButton onLogout={() => { setPodURL(null); navigate("/"); }}>
               <Button variant="contained" color="secondary">Logout</Button>

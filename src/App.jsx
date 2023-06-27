@@ -1,18 +1,16 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { PodContext, PodContextProvider } from "./context/PodContext";
-import React, { useContext } from "react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import Header from "./components/Header";
 import Login from "./components/Login";
+import { PodContextProvider } from "./context/PodContext";
+import React from "react";
 import { RequestContextProvider } from "./context/RequestContext";
-import ScreenSharing from "./components/ScreenSharing";
 import ScreenVersioning from "./components/ScreenVersioning";
 import ScreenView from "./components/ScreenView";
 import { SessionProvider } from "@inrupt/solid-ui-react";
 import { SnackbarProvider } from "notistack";
 import useAuth from "./js/useAuth";
-
 
 const darkTheme = createTheme({
   palette: {
@@ -51,9 +49,6 @@ const AppRoutes = () => {
       <Route path="/" element={<Login />} />
       <Route path="/version"
         element={loggedIn ? <ScreenVersioning /> : <Navigate replace to={"/"} />}
-      />
-      <Route path="/share"
-        element={loggedIn ? <ScreenSharing /> : <Navigate replace to={"/"} />}
       />
       <Route path="/view"
         element={loggedIn ? <ScreenView /> : <Navigate replace to={"/"} />}

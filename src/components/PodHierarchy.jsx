@@ -13,7 +13,7 @@ export default function PodHierarchy({ width }) {
     <Paper square style={{ width: width }} className="podHierarchy">
       <Typography className="basicHeader" style={{ textDecoration: "underline" }} >Hierarchy</Typography>
       <TreeView defaultCollapseIcon={<ExpandMoreIcon />} defaultExpandIcon={<ChevronRightIcon />}>
-        <TreeNode resourceURL={podURL} />
+        {podURL !== null && <TreeNode resourceURL={podURL} />}
       </TreeView>
     </Paper >
   );
