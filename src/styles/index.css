@@ -132,6 +132,13 @@ footer {
   flex-direction: row;
 }
 
+#adminContent {
+  display: flex;
+  height: 100%;
+  align-items: flex-start;
+  padding: 16px;
+}
+
 .podHierarchy, .resourceDisplay, .requestHeaders {
   overflow: hidden;
 }

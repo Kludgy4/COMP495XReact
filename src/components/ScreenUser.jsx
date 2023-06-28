@@ -7,7 +7,7 @@ import ResourceDisplay from "./ResourceDisplay";
 import { useNavigate } from "react-router-dom";
 import useWindowSize from "../js/useWindowSize";
 
-export default function ScreenVersioning() {
+export default function ScreenUser() {
   const { podURL } = useContext(PodContext);
   const navigate = useNavigate();
 

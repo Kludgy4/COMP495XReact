@@ -6,8 +6,8 @@ import { PodContext } from "../context/PodContext";
 import useAuth from "../js/useAuth";
 
 const pages = [
-  { name: "Version", location: "/version" },
-  { name: "View", location: "/view" },
+  { name: "User", location: "/user" },
+  { name: "Admin", location: "/admin" },
 ];
 
 export default function Header() {

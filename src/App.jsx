@@ -6,8 +6,8 @@ import Login from "./components/Login";
 import { PodContextProvider } from "./context/PodContext";
 import React from "react";
 import { RequestContextProvider } from "./context/RequestContext";
-import ScreenVersioning from "./components/ScreenVersioning";
-import ScreenView from "./components/ScreenView";
+import ScreenAdmin from "./components/ScreenAdmin";
+import ScreenUser from "./components/ScreenUser";
 import { SessionProvider } from "@inrupt/solid-ui-react";
 import { SnackbarProvider } from "notistack";
 import useAuth from "./js/useAuth";
@@ -47,11 +47,11 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
-      <Route path="/version"
-        element={loggedIn ? <ScreenVersioning /> : <Navigate replace to={"/"} />}
+      <Route path="/user"
+        element={loggedIn ? <ScreenUser /> : <Navigate replace to={"/"} />}
       />
-      <Route path="/view"
-        element={loggedIn ? <ScreenView /> : <Navigate replace to={"/"} />}
+      <Route path="/admin"
+        element={loggedIn ? <ScreenAdmin /> : <Navigate replace to={"/"} />}
       />
     </Routes>
   );

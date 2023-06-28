@@ -10,8 +10,8 @@ import { useSession } from "@inrupt/solid-ui-react";
 export default function TreeNode({ resourceURL }) {
 
   const { session } = useSession();
-  const [resources, setResources] = useState([]);
-  const { requestResource } = useContext(RequestContext);
+  const [resources, setResources] = useState([<></>]);
+  const { sendRequest } = useContext(RequestContext);
 
   const getContainerResources = async () => {
     // Get the URL of all resources inside the container
@@ -36,7 +36,7 @@ export default function TreeNode({ resourceURL }) {
     <TreeItem
       nodeId={resourceURL}
       label={pathToName(resourceURL)}
-      onClick={() => requestResource(resourceURL)}
+      onClick={() => sendRequest(resourceURL)}
       icon={<Article />}
     />
   );

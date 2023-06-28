@@ -10,7 +10,7 @@ import { useSession } from "@inrupt/solid-ui-react";
 export default function ActionVersion() {
 
   const { session } = useSession();
-  const { requestResource, responseHeaders, currentVersion, metadataURL, versionLocation } = useContext(RequestContext);
+  const { sendRequest, responseHeaders, currentVersion, metadataURL, versionLocation } = useContext(RequestContext);
 
   const [loadVersion, setLoadVersion] = useState(1);
   const [loadVersionError, setLoadVersionError] = useState(false);
@@ -40,7 +40,7 @@ export default function ActionVersion() {
       setLoadVersionError(true);
       return;
     }
-    requestResource(responseHeaders.url, parseInt(loadVersion, 10));
+    sendRequest(responseHeaders.url, parseInt(loadVersion, 10));
   };
 
   const commitVersion = async () => {
@@ -55,7 +55,7 @@ export default function ActionVersion() {
     metathing = buildThing(metathing).setInteger(hasVersionPredicate, currentVersion + 1).build();
     metaset = setThing(metaset, metathing);
     await saveSolidDatasetAt(metadataURL.url, metaset, { fetch: session.fetch });
-    requestResource(responseHeaders.url);
+    sendRequest(responseHeaders.url);
   };
 
   // React.useEffect(() => {
@@ -102,7 +102,7 @@ export default function ActionVersion() {
           size="small"
           style={{ flexGrow: 1, flexBasis: 0 }}
           startIcon={<Refresh />}
-          onClick={() => requestResource(responseHeaders.url)}
+          onClick={() => sendRequest(responseHeaders.url)}
         >
           Refresh Preview
         </Button>

@@ -51,7 +51,7 @@ export const hasVersionPredicate = "https://client-comp495x.duckdns.org/ns/hasVe
  * @returns A VERsioneD RESource DESCription SET that can be used to extract metadata info about a file
  */
 export const getVerdResDescSet = async (podURL, baseResourceURL, metadataURL, authFetch) => {
-  console.log("Getting new metadata");
+  // console.log(`Getting new metadata from ${metadataURL}`);
 
   let metaset = await getSolidDataset(metadataURL, { fetch: authFetch });
   let metathing = getThing(metaset, baseResourceURL);
@@ -67,7 +67,7 @@ export const getVerdResDescSet = async (podURL, baseResourceURL, metadataURL, au
     // Resource is currently unversioned, add metadata to support versioning
     metathing = buildThing(metathing).addInteger(hasVersionPredicate, 1).build();
     metaset = setThing(metaset, metathing);
-    metaset = await saveSolidDatasetAt(baseResourceURL, metaset, { fetch: authFetch });
+    metaset = await saveSolidDatasetAt(metadataURL, metaset, { fetch: authFetch });
   }
 
   // Retrieve the resource versioing location

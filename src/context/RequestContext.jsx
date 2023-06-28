@@ -12,10 +12,12 @@ import { PodContext } from "../context/PodContext";
 import { useSession } from "@inrupt/solid-ui-react";
 
 export const RequestContext = createContext({
-  requestResource: async (resourceURL, version = -1) => { return null; },
+  requestURL: "",
+  requestVersion: -1,
+  sendRequest: (resourceURL, version = -1) => { return null; },
   responseHeaders: new Headers(),
   resourceBody: "",
-  metadataURL: "",
+  metadataURL: { url: "" },
   currentVersion: 0,
   versionLocation: "",
   displayVersion: -1
@@ -31,7 +33,7 @@ export const RequestContextProvider = ({ children }) => {
   const [versionedRequest, setVersionedRequest] = useState({ url: "", version: -1 });
 
   // ENTRY POINT for requesting new resources
-  const requestResource = (url, version = -1) => setVersionedRequest({ url, version });
+  const sendRequest = (url, version = -1) => { setVersionedRequest({ url, version }); return null; };
   // If a new resource is requested, fetch it for display
   useEffect(() => { if (versionedRequest.url !== "") { fetchResource(); } }, [versionedRequest]);
 
@@ -66,7 +68,7 @@ export const RequestContextProvider = ({ children }) => {
     // Retrieve the requested resource version
     if (versionMeta.hasVersion === versionedRequest.version) {
       // base resource instead
-      requestResource(versionedRequest.url);
+      sendRequest(versionedRequest.url);
     } else {
       // Get and display the versioned resource in place of the actual resource
       const resourceVersionLocation = versionMeta.versionedIn + versionedRequest.version;
@@ -148,7 +150,9 @@ export const RequestContextProvider = ({ children }) => {
 
   return (
     <RequestContext.Provider value={{
-      requestResource: requestResource,
+      requestURL: versionedRequest.url,
+      requestVersion: versionedRequest.version,
+      sendRequest: sendRequest,
       responseHeaders: resHeaders,
       resourceBody: body,
       metadataURL: metadataRequest,

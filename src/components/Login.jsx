@@ -50,7 +50,7 @@ export default function Login() {
   const { loggedIn, sessionIn, podIn } = useAuth();
 
   React.useEffect(() => {
-    if (loggedIn) navigate("/version");
+    if (loggedIn) navigate("/user");
   }, [loggedIn]);
 
   return (
