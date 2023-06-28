@@ -1,8 +1,8 @@
 import { Button, TextField } from "@mui/material";
 import React, { useContext, useEffect, useState } from "react";
+import { getFile, getResourceInfoWithAcl } from "@inrupt/solid-client";
 import { PodContext } from "../context/PodContext";
 import { displayError } from "../js/helper";
-import { getResourceInfoWithAcl } from "@inrupt/solid-client";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "@inrupt/solid-ui-react";
 
@@ -25,7 +25,7 @@ export default function ScreenAdmin() {
   const getResourceContents = async () => {
     // console.log(resourceURL);
     try {
-      const info = await getResourceInfoWithAcl(resourceURL, { fetch: session.fetch });
+      const info = await getFile(resourceURL, { fetch: session.fetch });
       console.log(info);
       console.log(session.info);
     } catch (e) {
