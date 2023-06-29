@@ -1,14 +1,20 @@
 import {
   buildThing,
+  createAclFromFallbackAcl,
   createContainerAt,
   createContainerInContainer,
   getInteger,
+  getResourceAcl,
   getSolidDataset,
   getThing,
   getUrl,
+  hasAccessibleAcl,
+  hasFallbackAcl,
+  hasResourceAcl,
   saveSolidDatasetAt,
   setThing
 } from "@inrupt/solid-client";
+import { hasVersionPredicate, versionedInPredicate } from "./urls";
 import { enqueueSnackbar } from "notistack";
 
 export const displayError = (message) => enqueueSnackbar(message, { variant: "error" });
@@ -29,9 +35,22 @@ export const pathToName = (url) => {
   return resourceName;
 };
 
-// Predicates used to version resources in a pod
-export const versionedInPredicate = "https://client-comp495x.duckdns.org/ns/versionedIn";
-export const hasVersionPredicate = "https://client-comp495x.duckdns.org/ns/hasVersion";
+// Get the ACL for a given resource dataset. Creates an ACL if it is not available
+export const tryGetResourceAcl = (resourceDataset) => {
+  let sharedResourcesAcl;
+  if (!hasResourceAcl(resourceDataset)) {
+    if (!hasAccessibleAcl(resourceDataset)) {
+      throw new Error("1. No perms to change access rights");
+    }
+    if (!hasFallbackAcl(resourceDataset)) {
+      throw new Error("2. No perms to see who can access this resource");
+    }
+    sharedResourcesAcl = createAclFromFallbackAcl(resourceDataset);
+  } else {
+    sharedResourcesAcl = getResourceAcl(resourceDataset);
+  }
+  return sharedResourcesAcl;
+};
 
 
 /**

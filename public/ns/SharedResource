@@ -1,0 +1,16 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix clientcomp495x: <https://client-comp495x.duckdns.org/ns/>.
+
+clientcomp495x:SharedResource a rdfs:Class .
+
+clientcomp495x:sharedByAgent a rdf:Property ;
+  rdfs:label "sharedByAgent" ;
+  rdfs:comment "The agent that shared this resource with the ShareApp" ;
+  rdfs:range foaf:Agent .
+  
+clientcomp495x:sharedResource a rdf:Property ;
+  rdfs:label "sharedResource" ;
+  rdfs:comment "The URL of the shared resource" ;
+  rdfs:range rdfs:Resource .

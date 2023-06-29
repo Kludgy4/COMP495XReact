@@ -10,16 +10,17 @@ import { useSession } from "@inrupt/solid-ui-react";
 export default function TreeNode({ resourceURL }) {
 
   const { session } = useSession();
-  const [resources, setResources] = useState([<></>]);
+  const [resources, setResources] = useState([]);
   const { sendRequest } = useContext(RequestContext);
 
   const getContainerResources = async () => {
     // Get the URL of all resources inside the container
     const containerDataset = await getSolidDataset(resourceURL, { fetch: session.fetch });
     const containedResources = await getContainedResourceUrlAll(containerDataset);
-    setResources(containedResources.map((r) => {
+    const resources = containedResources.map((r) => {
       return <TreeNode key={r} resourceURL={r} />;
-    }));
+    });
+    setResources(resources);
   };
 
   // .versions string below hides the versions container in the Pod Hierarchy, remove to allow visual
@@ -29,7 +30,7 @@ export default function TreeNode({ resourceURL }) {
       label={pathToName(resourceURL)}
       onClick={getContainerResources}
     >
-      <TreeItem nodeId={resourceURL + "temp"} />
+      <TreeItem key={resourceURL + "temp"} nodeId={resourceURL + "temp"} />
       {resources.map(r => r)}
     </TreeItem>
   ) : (

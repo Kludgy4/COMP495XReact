@@ -4,7 +4,7 @@ import React, { useContext, useState } from "react";
 import { buildThing, getFile, getSolidDataset, getThing, saveFileInContainer, saveSolidDatasetAt, setThing } from "@inrupt/solid-client";
 import Button from "@mui/material/Button";
 import { RequestContext } from "../context/RequestContext";
-import { hasVersionPredicate } from "../js/helper";
+import { hasVersionPredicate } from "../js/urls";
 import { useSession } from "@inrupt/solid-ui-react";
 
 export default function ActionVersion() {
@@ -109,7 +109,7 @@ export default function ActionVersion() {
       </div>
       <Dialog
         open={openShouldCommit}
-        onClose={handleClose}
+        onClose={() => handleClose(false)}
       >
         <DialogTitle >
           {"Create a new resource version?"}

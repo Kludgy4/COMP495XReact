@@ -6,9 +6,10 @@ import {
   getThing,
   getUrl,
 } from "@inrupt/solid-client";
-import { getVerdResDescSet, hasVersionPredicate, versionedInPredicate } from "../js/helper";
+import { hasVersionPredicate, versionedInPredicate } from "../js/urls";
 import LinkHeader from "http-link-header";
 import { PodContext } from "../context/PodContext";
+import { getVerdResDescSet } from "../js/helper";
 import { useSession } from "@inrupt/solid-ui-react";
 
 export const RequestContext = createContext({
