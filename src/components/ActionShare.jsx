@@ -52,16 +52,11 @@ export default function ActionShare() {
     await saveAclFor(versionsResourceInfo, aclDataset, { fetch: session.fetch });
 
     // 5. Append the URL of the shared resource to an RDF file in the ShareApp pod to later be queried w/SPARQL
-    let sharedResourcesDataset = await getSolidDatasetWithAcl(sharedResourcesURL, { fetch: session.fetch });
+    let sharedResourcesDataset = await getSolidDataset(sharedResourcesURL, { fetch: session.fetch });
     const shareThing = buildThing(createThing({ name: requestURL })).addUrl(sharedBy, session.info.webId).build();
     sharedResourcesDataset = setThing(sharedResourcesDataset, shareThing);
-
-    const sharedResourcesAcl = tryGetResourceAcl(sharedResourcesDataset);
-    const updatedAcl = setPublicResourceAccess(sharedResourcesAcl, { read: false, append: true, write: false, control: false });
-    await saveAclFor(sharedResourcesDataset, updatedAcl);
-
     const savedResourcesDataset = await saveSolidDatasetAt(sharedResourcesURL, sharedResourcesDataset, { fetch: session.fetch });
-    console.log(savedResourcesDataset);
+    // console.log(savedResourcesDataset);
   };
 
   return <>
