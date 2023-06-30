@@ -1,7 +1,8 @@
 import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LogoutButton, useSession } from "@inrupt/solid-ui-react";
+import { Link, useLocation } from "react-router-dom";
 import React, { useContext } from "react";
+import ContextLogoutButton from "./ContextLogoutButton";
+import { LogoutButton } from "@inrupt/solid-ui-react";
 import { PodContext } from "../context/PodContext";
 import useAuth from "../js/useAuth";
 
@@ -12,9 +13,8 @@ const pages = [
 
 export default function Header() {
 
-  const navigate = useNavigate();
-  const location = useLocation();
   const { setPodURL } = useContext(PodContext);
+  const location = useLocation();
   const { loggedIn, sessionIn, podIn } = useAuth();
 
   return (
@@ -45,11 +45,7 @@ export default function Header() {
           {podIn && (
             <Button onClick={() => setPodURL(null)} color="secondary" variant="outlined">Disconnect Pod</Button>
           )}
-          {sessionIn && (
-            <LogoutButton onLogout={() => { setPodURL(null); navigate("/"); }}>
-              <Button variant="contained" color="secondary">Logout</Button>
-            </LogoutButton>
-          )}
+          {sessionIn && <ContextLogoutButton />}
         </Box>
       </Toolbar>
     </AppBar >

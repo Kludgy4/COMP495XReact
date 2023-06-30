@@ -4,6 +4,7 @@ import { buildThing, createAcl, createAclFromFallbackAcl, createThing, getAgentA
 import { shareAppWebID, sharedBy, sharedResourcesURL } from "../js/urls";
 import { RequestContext } from "../context/RequestContext";
 import { Share } from "@mui/icons-material";
+
 import { tryGetResourceAcl } from "../js/helper";
 import { universalAccess } from "@inrupt/solid-client";
 import { useSession } from "@inrupt/solid-ui-react";
@@ -58,6 +59,7 @@ export default function ActionShare() {
     const savedResourcesDataset = await saveSolidDatasetAt(sharedResourcesURL, sharedResourcesDataset, { fetch: session.fetch });
     // console.log(savedResourcesDataset);
   };
+
 
   return <>
     <Typography>Grant access to this app for all versions of the currently selected resource</Typography>
