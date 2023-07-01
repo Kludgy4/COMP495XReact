@@ -9,23 +9,178 @@ import { displayError, tryGetResourceAcl } from "../js/helper";
 import { shareAppWebID, sharedResourcePredicate, sharedResourcesURL } from "../js/urls";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import ContextLogoutButton from "./ContextLogoutButton";
+import { DataGrid } from "@mui/x-data-grid";
 import { PodContext } from "../context/PodContext";
 import { QueryEngine } from "@comunica/query-sparql-solid";
+import { RequestContext } from "../context/RequestContext";
 import dayjs from "dayjs";
-import genAddrThing from "../js/addressGenerator";
 import { useNavigate } from "react-router-dom";
+import useResponsiveWidth from "../js/useResponsiveWidth";
 import { useSession } from "@inrupt/solid-ui-react";
+import useWindowSize from "../js/useWindowSize";
 
 export default function ScreenAdmin() {
   const { podURL } = useContext(PodContext);
   const navigate = useNavigate();
   const { session } = useSession();
 
+  const [windowWidth, windowHeight] = useWindowSize();
+  const contentWidth = useResponsiveWidth(windowWidth);
+
   useEffect(() => {
     if (podURL === null) {
       navigate("/");
     }
   }, [podURL]);
+
+  return (
+    <div id="mainContent" style={{ height: "calc(100vh - 64px)" }}>
+      <div id="adminContent" style={{ flexDirection: "column", alignItems: "center" }}>
+        {session.info.webId !== shareAppWebID ? (
+          <>
+            <div>Please log out, then log back in with an admin WebID to access this screen</div>
+            <ContextLogoutButton />
+          </>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px", width: contentWidth, flexGrow: 1, overflow: "scroll" }}>
+            <AddressHistory />
+            <AddressAtDate />
+            <TestingArea />
+          </div>
+        )}
+      </div>
+    </div >
+  );
+}
+
+
+const AddressHistory = () => {
+
+  const { session } = useSession();
+  const { sendRequest, versionLocation } = useContext(RequestContext);
+  const [t, setT] = useState([]);
+
+  const [addressHistory, setAddressHistory] = useState([]);
+  const [searchWebid, setSearchWebid] = useState("");
+  const [searchWebidError, setSearchWebidError] = useState("");
+  const changeSearchWebid = (event) => {
+    setSearchWebid(event.target.value);
+    setSearchWebidError("");
+  };
+
+  const retrieveHistory = async () => {
+    try {
+      await getSolidDataset(searchWebid, { fetch: session.fetch });
+      const dataset = await getSolidDataset(sharedResourcesURL, { fetch: session.fetch });
+      const t = getThing(dataset, sharedResourcesURL + "#" + searchWebid);
+      if (t === null) {
+        setSearchWebidError("WebID has shared no resources");
+        return;
+      }
+
+      const urls = getUrlAll(t, sharedResourcePredicate);
+
+      // Determine which resources hold a date
+
+      // setT(urls);
+      // console.log(urls);
+    } catch (e) {
+      setSearchWebidError("WebID Invalid");
+      displayError(e.message);
+    }
+    // console.log(searchWebid);
+  };
+
+  return (<>
+    <Typography variant="h5">WebID Address History</Typography>
+    <div style={{ display: "flex", flexDirection: "row", gap: "12px", width: "100%", alignItems: "flex-start" }}>
+      <TextField
+        fullWidth
+        value={searchWebid}
+        onChange={changeSearchWebid}
+        placeholder="https://comp495x.duckdns.org/ExamplePod/profile/card#me"
+        error={searchWebidError !== ""}
+        helperText={searchWebidError}
+        label="Search WebID"
+        style={{ marginBottom: "12px" }}
+      />
+      <div>
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<History />}
+          onClick={retrieveHistory}
+        >
+          Retrieve History
+        </Button>
+      </div>
+    </div>
+    {t}
+    <div style={{ minHeight: "400px" }}>
+      <DataGrid
+        rows={addressHistory}
+        columns={[
+          { field: "versionDate", headerName: "Version Date", flex: 1, sortable: true },
+          { field: "street", headerName: "Street", flex: 1, sortable: false },
+          { field: "postalCode", headerName: "Postcode", flex: 1, sortable: false },
+          { field: "locality", headerName: "Locality", flex: 1, sortable: false },
+          { field: "region", headerName: "Region", flex: 1, sortable: false },
+          { field: "country", headerName: "Country", flex: 1, sortable: false }
+        ]}
+        disableColumnSelector={true}
+      />
+    </div>
+  </>);
+};
+
+const AddressAtDate = () => {
+
+  const [searchDate, setSearchDate] = useState(dayjs());
+  const searchAddressDate = () => {
+    console.log("searching " + dayjs(searchDate).toString());
+  };
+
+  const [userAddresses, setUserAddresses] = useState([]);
+
+  return (<>
+    <Typography variant="h5">Address of All Users at Date</Typography>
+
+    <div style={{ display: "flex", flexDirection: "row", gap: "12px" }}>
+      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en-gb">
+        <DatePicker
+          value={searchDate}
+          onChange={newDate => setSearchDate(newDate)}
+        />
+      </LocalizationProvider>
+      <Button
+        variant="contained"
+        size="small"
+        startIcon={<Search />}
+        onClick={searchAddressDate}
+      >
+        Search
+      </Button>
+    </div>
+    <div style={{ minHeight: "400px" }}>
+      <DataGrid
+        rows={userAddresses}
+        columns={[
+          { field: "webid", headerName: "WebID", flex: 2, sortable: true },
+          { field: "address", headerName: "Home Address", flex: 1, sortable: false },
+        ]}
+        disableColumnSelector={true}
+      />
+    </div>
+  </>);
+};
+
+////////////////////////////////////////////////////////////////////////////////
+/////                             Testing Area                             /////
+////////////////////////////////////////////////////////////////////////////////
+
+const TestingArea = () => {
+
+  const { session } = useSession();
 
   const [resourceURL, setResourceURL] = useState("");
   const urlChange = (event) => {
@@ -120,133 +275,42 @@ export default function ScreenAdmin() {
     console.log("Done!");
   };
 
-  const [addressHistory, setAddressHistory] = useState([]);
-  const [searchWebid, setSearchWebid] = useState("");
-  const [searchWebidError, setSearchWebidError] = useState("");
-  const changeSearchWebid = (event) => {
-    setSearchWebid(event.target.value);
-    setSearchWebidError("");
-  };
-
-  const retrieveHistory = async () => {
-    try {
-      await getSolidDataset(searchWebid, { fetch: session.fetch });
-      const dataset = await getSolidDataset(sharedResourcesURL, { fetch: session.fetch });
-      const t = getThing(dataset, sharedResourcesURL + "#" + searchWebid);
-      if (t === null) {
-        setSearchWebidError("WebID has shared no resources");
-        return;
-      }
-
-      const urls = getUrlAll(t, sharedResourcePredicate);
-      console.log(urls);
-    } catch (e) {
-      setSearchWebidError("WebID Invalid");
-      displayError(e.message);
-    }
-    // console.log(searchWebid);
-  };
-
-  const [searchDate, setSearchDate] = React.useState(dayjs());
-  const searchAddressDate = () => {
-    console.log("searching " + dayjs(searchDate).toString());
-  };
-
-  return (
-    <div id="mainContent" style={{ height: "calc(100vh - 64px)" }}>
-      <div id="adminContent" style={{ flexDirection: "column", gap: "16px" }}>
-        {session.info.webId !== shareAppWebID ? (
-          <div>
-            <div>Please log out, then log back in with an admin WebID to access this screen</div>
-            <ContextLogoutButton />
-          </div>
-        ) : (
-          <>
-            <Typography variant="h5">WebID Address History</Typography>
-
-            <div style={{ display: "flex", flexDirection: "row", gap: "12px", width: "100%", alignItems: "flex-start" }}>
-              <TextField
-                fullWidth
-                value={searchWebid}
-                onChange={changeSearchWebid}
-                placeholder="https://comp495x.duckdns.org/ExamplePod/profile/card#me"
-                error={searchWebidError !== ""}
-                helperText={searchWebidError}
-                label="Search WebID"
-                style={{ marginBottom: "12px" }}
-              />
-              <div>
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<History />}
-                  onClick={retrieveHistory}
-                >
-                  Retrieve History
-                </Button>
-              </div>
-            </div>
-
-
-
-            <Typography variant="h5">Address of All Users at Date</Typography>
-
-            <div style={{ display: "flex", flexDirection: "row", gap: "12px" }}>
-              <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en-gb">
-                <DatePicker
-                  value={searchDate}
-                  onChange={newDate => setSearchDate(newDate)}
-                />
-              </LocalizationProvider>
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Search />}
-                onClick={searchAddressDate}
-              >
-                Search
-              </Button>
-            </div>
-
-            <Typography variant="h5">Testing</Typography>
-            {session.info.webId}
-            <div style={{ display: "flex", flexDirection: "row", gap: "8px", alignItems: "center" }}>
-              <Typography>Shared Resources</Typography>
-              <Button
-                variant="outlined"
-                color="error"
-                size="small"
-                onClick={() => setConfirmDialogOpen(true)}
-              >
-                Reset
-              </Button>
-            </div>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => test()}
-            >
-              Test
-            </Button>
-            <Dialog
-              open={confirmDialogOpen}
-              onClose={() => closeConfirmDialog(false)}
-              aria-labelledby="alert-dialog-title"
-              aria-describedby="alert-dialog-description"
-            >
-              <DialogTitle id="alert-dialog-title">
-                {"Disconnect all shared resources?"}
-              </DialogTitle>
-              <DialogActions>
-                <Button onClick={() => closeConfirmDialog(false)} color="secondary">No</Button>
-                <Button onClick={() => closeConfirmDialog(true)} autoFocus color="secondary">
-                  Yes
-                </Button>
-              </DialogActions>
-            </Dialog>
-          </>
-        )}
-      </div>
-    </div >
-  );
-}
+  return (<>
+    <Typography variant="h5">Testing</Typography>
+    {session.info.webId}
+    <div style={{ display: "flex", flexDirection: "row", gap: "8px", alignItems: "center" }}>
+      <Typography>Shared Resources</Typography>
+      <Button
+        variant="outlined"
+        color="error"
+        size="small"
+        onClick={() => setConfirmDialogOpen(true)}
+      >
+        Reset
+      </Button>
+    </div>
+    <Button
+      variant="contained"
+      color="primary"
+      onClick={() => test()}
+    >
+      Test
+    </Button>
+    <Dialog
+      open={confirmDialogOpen}
+      onClose={() => closeConfirmDialog(false)}
+      aria-labelledby="alert-dialog-title"
+      aria-describedby="alert-dialog-description"
+    >
+      <DialogTitle id="alert-dialog-title">
+        {"Disconnect all shared resources?"}
+      </DialogTitle>
+      <DialogActions>
+        <Button onClick={() => closeConfirmDialog(false)} color="secondary">No</Button>
+        <Button onClick={() => closeConfirmDialog(true)} autoFocus color="secondary">
+          Yes
+        </Button>
+      </DialogActions>
+    </Dialog>
+  </>);
+};
