@@ -8,4 +8,4 @@ export const versionedInPredicate = "https://client-comp495x.duckdns.org/ns/vers
 export const hasVersionPredicate = "https://client-comp495x.duckdns.org/ns/hasVersion";
 
 // Predicates used to share versioned resources from a pod
-export const sharedBy = "https://client-comp495x.duckdns.org/ns/sharedBy";
+export const sharedResourcePredicate = "https://client-comp495x.duckdns.org/ns/sharedResource";

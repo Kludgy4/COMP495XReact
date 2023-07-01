@@ -1,7 +1,7 @@
 import { Button, Typography } from "@mui/material";
 import React, { useContext, useState } from "react";
 import { buildThing, createAcl, createAclFromFallbackAcl, createThing, getAgentAccess, getAgentDefaultAccess, getFallbackAcl, getResourceAcl, getResourceInfo, getResourceInfoWithAcl, getSolidDataset, getSolidDatasetWithAcl, getThing, hasAccessibleAcl, hasAcl, hasFallbackAcl, hasResourceAcl, isContainer, saveAclFor, saveSolidDatasetAt, setAgentDefaultAccess, setAgentResourceAccess, setPublicResourceAccess, setThing } from "@inrupt/solid-client";
-import { shareAppWebID, sharedBy, sharedResourcesURL } from "../js/urls";
+import { shareAppWebID, sharedResourcePredicate, sharedResourcesURL } from "../js/urls";
 import { RequestContext } from "../context/RequestContext";
 import { Share } from "@mui/icons-material";
 
@@ -54,10 +54,15 @@ export default function ActionShare() {
 
     // 5. Append the URL of the shared resource to an RDF file in the ShareApp pod to later be queried w/SPARQL
     let sharedResourcesDataset = await getSolidDataset(sharedResourcesURL, { fetch: session.fetch });
-    const shareThing = buildThing(createThing({ name: requestURL })).addUrl(sharedBy, session.info.webId).build();
+
+    const thingFragment = sharedResourcesURL + "#" + session.info.webId;
+    let shareThing = getThing(sharedResourcesDataset, thingFragment);
+    if (shareThing === null) shareThing = createThing({ name: session.info.webId });
+    shareThing = buildThing(shareThing).addUrl(sharedResourcePredicate, requestURL).build();
+
     sharedResourcesDataset = setThing(sharedResourcesDataset, shareThing);
-    const savedResourcesDataset = await saveSolidDatasetAt(sharedResourcesURL, sharedResourcesDataset, { fetch: session.fetch });
-    // console.log(savedResourcesDataset);
+
+    await saveSolidDatasetAt(sharedResourcesURL, sharedResourcesDataset, { fetch: session.fetch });
   };
 
 

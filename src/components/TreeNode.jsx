@@ -1,4 +1,4 @@
-import { Article, PrecisionManufacturing } from "@mui/icons-material";
+import { Article, Delete, PrecisionManufacturing, Refresh } from "@mui/icons-material";
 import { ListItemIcon, Menu, MenuItem } from "@mui/material";
 import React, { useContext, useState } from "react";
 import { createSolidDataset, deleteSolidDataset, getContainedResourceUrlAll, getContentType, getFile, getSolidDataset, isContainer, saveSolidDatasetAt, setThing } from "@inrupt/solid-client";
@@ -32,50 +32,89 @@ export default function TreeNode({ resourceURL }) {
 
   const genAddrInFolder = async () => {
     const addrDatasetLocation = resourceURL + "address.ttl";
-
-    // await deleteSolidDataset(addrDatasetLocation, { fetch: session.fetch });
-
-    let addrDataset = createSolidDataset();
-    const addrThing = genAddrThing(addrDatasetLocation);
-    addrDataset = setThing(addrDataset, addrThing);
-    await saveSolidDatasetAt(addrDatasetLocation, addrDataset, { fetch: session.fetch });
-
+    const addrDataset = createSolidDataset();
+    genAddrDatasetAt(addrDataset, addrDatasetLocation);
     handleClose();
+  };
+
+  const refreshAddress = async () => {
+    const addrDataset = await getSolidDataset(resourceURL, { fetch: session.fetch });
+    genAddrDatasetAt(addrDataset, resourceURL);
+    handleClose();
+  };
+
+  const genAddrDatasetAt = async (addrDataset, url) => {
+    const addrThing = genAddrThing(url);
+    addrDataset = setThing(addrDataset, addrThing);
+    await saveSolidDatasetAt(url, addrDataset, { fetch: session.fetch });
+
   };
 
   const handleClose = () => {
     setContextMenu(null);
   };
 
-  // .versions string below hides the versions container in the Pod Hierarchy, remove to allow visual
-  return isContainer(resourceURL) ? pathToName(resourceURL) !== ".versions" && (
-    <TreeItem
-      nodeId={resourceURL}
-      label={<div onContextMenu={handleContextMenu} >{pathToName(resourceURL)}</div>}
-      onClick={getContainerResources}
-    >
-      <TreeItem key={resourceURL + "temp"} nodeId={resourceURL + "temp"} />
-      {resources.map(r => r)}
-      <Menu
-        open={contextMenu !== null}
-        onClose={handleClose}
-        anchorReference="anchorPosition"
-        anchorPosition={contextMenu !== null ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
-      >
-        <MenuItem onClick={() => genAddrInFolder()}>
-          <ListItemIcon>
-            <PrecisionManufacturing />
-          </ListItemIcon>
-          Generate address here
+  const createMenuItems = () => {
+    const menuItems = [];
+
+    if (isContainer(resourceURL)) {
+      menuItems.push(
+        <MenuItem onClick={() => genAddrInFolder()} key="genaddr">
+          <ListItemIcon><PrecisionManufacturing /></ListItemIcon>
+          Generate address.ttl
         </MenuItem>
-      </Menu>
-    </TreeItem>
-  ) : (
-    <TreeItem
-      nodeId={resourceURL}
-      label={pathToName(resourceURL)}
-      onClick={() => sendRequest(resourceURL)}
-      icon={<Article />}
-    />
-  );
+      );
+    } else {
+      if (pathToName(resourceURL) === "address.ttl") {
+        menuItems.push(
+          <MenuItem onClick={() => refreshAddress()} key="refaddr">
+            <ListItemIcon><Refresh /></ListItemIcon>
+            Refresh Address
+          </MenuItem>
+        );
+      }
+      menuItems.push(
+        <MenuItem onClick={() => deleteAddress()} key="deladdr">
+          <ListItemIcon><Delete color="error" /></ListItemIcon>
+          Delete
+        </MenuItem>
+      );
+    }
+
+    return menuItems;
+  };
+
+  const deleteAddress = () => {
+    deleteSolidDataset(resourceURL, { fetch: session.fetch });
+  };
+
+  // .versions string below hides the versions container in the Pod Hierarchy, remove to allow visual
+  return <>
+    {isContainer(resourceURL) ? pathToName(resourceURL) !== ".versions" && (
+      <TreeItem
+        nodeId={resourceURL}
+        label={<div onContextMenu={handleContextMenu} >{pathToName(resourceURL)}</div>}
+        onClick={getContainerResources}
+      >
+        <TreeItem key={resourceURL + "temp"} nodeId={resourceURL + "temp"} />
+        {resources.map(r => r)}
+
+      </TreeItem>
+    ) : (
+      <TreeItem
+        nodeId={resourceURL}
+        label={<div onContextMenu={handleContextMenu} >{pathToName(resourceURL)}</div>}
+        onClick={() => sendRequest(resourceURL)}
+        icon={<Article />}
+      />
+    )}
+    <Menu
+      open={contextMenu !== null}
+      onClose={handleClose}
+      anchorReference="anchorPosition"
+      anchorPosition={contextMenu !== null ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
+    >
+      {createMenuItems()}
+    </Menu>
+  </>;
 }
