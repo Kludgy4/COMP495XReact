@@ -3,12 +3,13 @@ import { Button, Dialog, DialogActions, DialogTitle, TextField, Typography } fro
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { History, Search } from "@mui/icons-material";
 import React, { useContext, useEffect, useState } from "react";
+import { convertUnixToDatestring, displayError, extractAddressFromThing, tryGetResourceAcl } from "../js/helper";
 import { createSolidDataset, deleteSolidDataset, getFile, getInteger, getLinkedResourceUrlAll, getResourceInfo, getSolidDataset, getSolidDatasetWithAcl, getStringNoLocale, getThing, getUrl, getUrlAll, saveAclFor, saveSolidDatasetAt, setAgentResourceAccess, setPublicResourceAccess } from "@inrupt/solid-client";
-import { displayError, extractAddressFromThing, tryGetResourceAcl } from "../js/helper";
 import { hasVersionPredicate, shareAppWebID, sharedResourcePredicate, sharedResourcesURL, versionedInPredicate } from "../js/urls";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import ContextLogoutButton from "./ContextLogoutButton";
 import { DataGrid } from "@mui/x-data-grid";
+import LinearProgressWithLabel from "./LinearProgressWithLabel";
 import { POSIX } from "@inrupt/vocab-common-rdf";
 import { PodContext } from "../context/PodContext";
 import { QueryEngine } from "@comunica/query-sparql-solid";
@@ -53,13 +54,11 @@ export default function ScreenAdmin() {
   );
 }
 
-
 const AddressHistory = () => {
 
   const { session } = useSession();
   const { sendRequest, versionLocation } = useContext(RequestContext);
-  const { podURL } = useContext(RequestContext);
-  const [debug, setDebug] = useState("");
+  const { podURL } = useContext(PodContext);
 
   const [addressHistory, setAddressHistory] = useState([]);
   const [searchWebid, setSearchWebid] = useState("");
@@ -72,15 +71,15 @@ const AddressHistory = () => {
     setSearchWebidError("");
   }, [searchWebid]);
 
-  const getURLAddressAndVersions = async (url) => {
+  const getURLAddressAndVersions = async (datasetURL, thingURL = datasetURL) => {
     const urlAddresses = [];
 
     // 1. Get base resource
-    const sharedURLDataset = await getSolidDataset(url, { fetch: session.fetch });
+    const sharedURLDataset = await getSolidDataset(datasetURL, { fetch: session.fetch });
     // TODO: Fix weird hash fragment shennanigans
-    const sharedAddressThing = getThing(sharedURLDataset, url + "#" + url);
+    const sharedAddressThing = getThing(sharedURLDataset, datasetURL + "#" + thingURL);
     if (sharedAddressThing === null) {
-      console.log("Shared resource does not have address thing: ", sharedAddressThing);
+      console.log("Shared resource does not have address thing: ", thingURL, sharedURLDataset);
       return [];
     }
 
@@ -95,15 +94,14 @@ const AddressHistory = () => {
       console.log("No metadata set");
       return [];
     }
-    const metathing = getThing(metaset, url);
+    const metathing = getThing(metaset, datasetURL);
     if (metathing === null) {
       console.log("No versions available for this file");
       return [];
     }
 
     const modTime = getInteger(metathing, POSIX.mtime);
-    const date = dayjs.unix(modTime).locale("en-au").format("DD/MM/YYYY HH:mm:ss");
-    const address = { ...extractAddressFromThing(sharedAddressThing), versionDate: date };
+    const address = { ...extractAddressFromThing(sharedAddressThing), versionDate: modTime };
     if (address === null) {
       console.log("No address present in shared file");
       return [];
@@ -119,7 +117,7 @@ const AddressHistory = () => {
 
     for (let i = 1; i < versionsAvailable; i++) {
       const versionURL = versionsLocation + i;
-      const versionAddress = await getURLAddressAndVersions(versionURL);
+      const versionAddress = await getURLAddressAndVersions(versionURL, datasetURL);
       urlAddresses.push(...versionAddress);
       console.log("TODO: Get address from " + versionURL);
     }
@@ -127,7 +125,10 @@ const AddressHistory = () => {
     return urlAddresses;
   };
 
+  const [part, setPart] = useState(1);
+  const [whole, setWhole] = useState(1);
   const retrieveHistory = async () => {
+    setAddressHistory([]);
     // Retrieve all urls shared by the selected user with ShareApp 
     let sharedResourcesDataset;
     try {
@@ -144,6 +145,9 @@ const AddressHistory = () => {
       return;
     }
     const sharedURLs = getUrlAll(userSharedResourcesThing, sharedResourcePredicate);
+    let numSharedParsed = 0;
+    setPart(numSharedParsed);
+    setWhole(sharedURLs.length);
 
     // Check for home addresses in each shared url one by one
     // TODO: Do this asynchronously for performance
@@ -151,9 +155,16 @@ const AddressHistory = () => {
     for (const sharedURL of sharedURLs) {
       const sharedAddresses = await getURLAddressAndVersions(sharedURL);
       if (sharedAddresses) userAddresses.push(...sharedAddresses);
+      setPart(++numSharedParsed);
     }
+    setPart(sharedURLs.length);
     // Push these out for display to the user
-    const indexMappedAddresses = userAddresses.map((addr, index) => ({ id: index, ...addr }));
+    const indexMappedAddresses = userAddresses.sort((a, b) => a - b).map(
+      (addr, index) => ({
+        id: index,
+        ...addr,
+        versionDate: convertUnixToDatestring(addr.versionDate)
+      }));
     setAddressHistory(indexMappedAddresses);
   };
 
@@ -181,7 +192,7 @@ const AddressHistory = () => {
         </Button>
       </div>
     </div>
-    {debug}
+    <LinearProgressWithLabel part={part} whole={whole} />
     <div style={{ minHeight: "400px" }}>
       <DataGrid
         rows={addressHistory}

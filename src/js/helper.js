@@ -17,6 +17,7 @@ import {
 } from "@inrupt/solid-client";
 import { hasVersionPredicate, versionedInPredicate } from "./urls";
 import { SCHEMA_INRUPT } from "@inrupt/vocab-common-rdf";
+import dayjs from "dayjs";
 import { enqueueSnackbar } from "notistack";
 
 export const displayError = (message) => enqueueSnackbar(message, { variant: "error" });
@@ -140,4 +141,8 @@ export const extractAddressFromThing = (addressThing) => {
     return null;
   }
   return addr;
+};
+
+export const convertUnixToDatestring = (timestamp) => {
+  return dayjs.unix(timestamp).locale("en-au").format("DD/MM/YYYY HH:mm:ss");
 };
