@@ -9,7 +9,7 @@ import {
 import { hasVersionPredicate, versionedInPredicate } from "../js/urls";
 import LinkHeader from "http-link-header";
 import { PodContext } from "../context/PodContext";
-import { getVerdResDescSet } from "../js/helper";
+import { getVersionedResourceDescriptionSet } from "../js/helper";
 import { useSession } from "@inrupt/solid-ui-react";
 
 export const RequestContext = createContext({
@@ -112,7 +112,7 @@ export const RequestContextProvider = ({ children }) => {
     const descResURI = headersToDescResURI(headers);
     setMetadataRequest({ url: descResURI });
     // Retrieve it
-    const metaset = await getVerdResDescSet(podURL, versionedRequest.url, descResURI, session.fetch);
+    const metaset = await getVersionedResourceDescriptionSet(podURL, versionedRequest.url, descResURI, session.fetch);
     if (metaset === null) {
       setMetadataThing(null);
       setCurrentVersion(0);

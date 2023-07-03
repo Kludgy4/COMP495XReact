@@ -1,15 +1,15 @@
 import "dayjs/locale/en-gb";
-import * as $rdf from "rdflib";
-import { Button, Dialog, DialogActions, DialogTitle, TextField, Typography, fabClasses } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogTitle, TextField, Typography } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { History, Search } from "@mui/icons-material";
 import React, { useContext, useEffect, useState } from "react";
-import { createSolidDataset, deleteSolidDataset, getFile, getResourceInfoWithAcl, getSolidDataset, getSolidDatasetWithAcl, getThing, getUrl, getUrlAll, saveAclFor, saveSolidDatasetAt, setAgentResourceAccess, setPublicResourceAccess } from "@inrupt/solid-client";
-import { displayError, tryGetResourceAcl } from "../js/helper";
-import { shareAppWebID, sharedResourcePredicate, sharedResourcesURL } from "../js/urls";
+import { createSolidDataset, deleteSolidDataset, getFile, getInteger, getLinkedResourceUrlAll, getResourceInfo, getSolidDataset, getSolidDatasetWithAcl, getStringNoLocale, getThing, getUrl, getUrlAll, saveAclFor, saveSolidDatasetAt, setAgentResourceAccess, setPublicResourceAccess } from "@inrupt/solid-client";
+import { displayError, extractAddressFromThing, tryGetResourceAcl } from "../js/helper";
+import { hasVersionPredicate, shareAppWebID, sharedResourcePredicate, sharedResourcesURL, versionedInPredicate } from "../js/urls";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import ContextLogoutButton from "./ContextLogoutButton";
 import { DataGrid } from "@mui/x-data-grid";
+import { POSIX } from "@inrupt/vocab-common-rdf";
 import { PodContext } from "../context/PodContext";
 import { QueryEngine } from "@comunica/query-sparql-solid";
 import { RequestContext } from "../context/RequestContext";
@@ -58,37 +58,103 @@ const AddressHistory = () => {
 
   const { session } = useSession();
   const { sendRequest, versionLocation } = useContext(RequestContext);
-  const [t, setT] = useState([]);
+  const { podURL } = useContext(RequestContext);
+  const [debug, setDebug] = useState("");
 
   const [addressHistory, setAddressHistory] = useState([]);
   const [searchWebid, setSearchWebid] = useState("");
   const [searchWebidError, setSearchWebidError] = useState("");
   const changeSearchWebid = (event) => {
     setSearchWebid(event.target.value);
+  };
+
+  useEffect(() => {
     setSearchWebidError("");
+  }, [searchWebid]);
+
+  const getURLAddressAndVersions = async (url) => {
+    const urlAddresses = [];
+
+    // 1. Get base resource
+    const sharedURLDataset = await getSolidDataset(url, { fetch: session.fetch });
+    // TODO: Fix weird hash fragment shennanigans
+    const sharedAddressThing = getThing(sharedURLDataset, url + "#" + url);
+    if (sharedAddressThing === null) {
+      console.log("Shared resource does not have address thing: ", sharedAddressThing);
+      return [];
+    }
+
+    // 2. Get resource history
+    //   a. Get resource metadata
+    const linkedResources = getLinkedResourceUrlAll(sharedURLDataset);
+    const metadataURL = linkedResources["describedby"][0];
+    let metaset;
+    try {
+      metaset = await getSolidDataset(metadataURL, { fetch: session.fetch });
+    } catch (e) {
+      console.log("No metadata set");
+      return [];
+    }
+    const metathing = getThing(metaset, url);
+    if (metathing === null) {
+      console.log("No versions available for this file");
+      return [];
+    }
+
+    const modTime = getInteger(metathing, POSIX.mtime);
+    const date = dayjs.unix(modTime).locale("en-au").format("DD/MM/YYYY HH:mm:ss");
+    const address = { ...extractAddressFromThing(sharedAddressThing), versionDate: date };
+    if (address === null) {
+      console.log("No address present in shared file");
+      return [];
+    }
+    urlAddresses.push(address);
+
+    //   b. Get versions of the file (with addresses?) as well
+    const versionsLocation = getUrl(metathing, versionedInPredicate);
+    const versionsAvailable = getInteger(metathing, hasVersionPredicate);
+    if (versionsLocation === null || versionsAvailable === null) {
+      return urlAddresses;
+    }
+
+    for (let i = 1; i < versionsAvailable; i++) {
+      const versionURL = versionsLocation + i;
+      const versionAddress = await getURLAddressAndVersions(versionURL);
+      urlAddresses.push(...versionAddress);
+      console.log("TODO: Get address from " + versionURL);
+    }
+
+    return urlAddresses;
   };
 
   const retrieveHistory = async () => {
+    // Retrieve all urls shared by the selected user with ShareApp 
+    let sharedResourcesDataset;
     try {
-      await getSolidDataset(searchWebid, { fetch: session.fetch });
-      const dataset = await getSolidDataset(sharedResourcesURL, { fetch: session.fetch });
-      const t = getThing(dataset, sharedResourcesURL + "#" + searchWebid);
-      if (t === null) {
-        setSearchWebidError("WebID has shared no resources");
-        return;
-      }
-
-      const urls = getUrlAll(t, sharedResourcePredicate);
-
-      // Determine which resources hold a date
-
-      // setT(urls);
-      // console.log(urls);
+      sharedResourcesDataset = await getSolidDataset(sharedResourcesURL, { fetch: session.fetch });
     } catch (e) {
       setSearchWebidError("WebID Invalid");
       displayError(e.message);
+      return;
     }
-    // console.log(searchWebid);
+
+    const userSharedResourcesThing = getThing(sharedResourcesDataset, sharedResourcesURL + "#" + searchWebid);
+    if (userSharedResourcesThing === null) {
+      setSearchWebidError("WebID has shared no resources");
+      return;
+    }
+    const sharedURLs = getUrlAll(userSharedResourcesThing, sharedResourcePredicate);
+
+    // Check for home addresses in each shared url one by one
+    // TODO: Do this asynchronously for performance
+    const userAddresses = [];
+    for (const sharedURL of sharedURLs) {
+      const sharedAddresses = await getURLAddressAndVersions(sharedURL);
+      if (sharedAddresses) userAddresses.push(...sharedAddresses);
+    }
+    // Push these out for display to the user
+    const indexMappedAddresses = userAddresses.map((addr, index) => ({ id: index, ...addr }));
+    setAddressHistory(indexMappedAddresses);
   };
 
   return (<>
@@ -115,7 +181,7 @@ const AddressHistory = () => {
         </Button>
       </div>
     </div>
-    {t}
+    {debug}
     <div style={{ minHeight: "400px" }}>
       <DataGrid
         rows={addressHistory}
@@ -238,7 +304,7 @@ const TestingArea = () => {
     //     } LIMIT 100
     //   `, {
     //   sources: [sharedResourcesURL],
-    //   "@comunica/actor-http-inrupt-solid-client-authn:session": session,
+    //   "@comunica/actor-http-inrupt-sold-client-authn:session": session,
     // });
 
     const query = `
@@ -259,18 +325,6 @@ const TestingArea = () => {
     bindingsStream.on("data", (b) => {
       console.log(b.toString());
     });
-
-    // const bindings = await bindingsStream.toArray();
-    // console.log(bindings);
-
-    // rdflib?? (solid???)
-    // const doc = $rdf.sym(sharedResourcesURL);
-    // const store = $rdf.graph();
-    // const bindings = await bindingsStream.toArray();
-    // console.log(bindings[3].get("s").value);
-    // console.log(bindings[3].get("p").value);
-    // console.log(bindings[3].get("o").value);
-    // console.log(bindings);
 
     console.log("Done!");
   };

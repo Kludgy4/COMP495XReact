@@ -6,6 +6,7 @@ import {
   getInteger,
   getResourceAcl,
   getSolidDataset,
+  getStringNoLocale,
   getThing,
   getUrl,
   hasAccessibleAcl,
@@ -15,6 +16,7 @@ import {
   setThing
 } from "@inrupt/solid-client";
 import { hasVersionPredicate, versionedInPredicate } from "./urls";
+import { SCHEMA_INRUPT } from "@inrupt/vocab-common-rdf";
 import { enqueueSnackbar } from "notistack";
 
 export const displayError = (message) => enqueueSnackbar(message, { variant: "error" });
@@ -52,13 +54,6 @@ export const tryGetResourceAcl = (resourceDataset) => {
   return sharedResourcesAcl;
 };
 
-
-/**
-
- * @param {*} metaset The SolidDataset
- * @returns 
- */
- 
 /**
  * Checks that the Resource Description "dataset" is valid, and contains what
  * is required for versioning. Adds versioning predicates if missing and sets
@@ -67,9 +62,9 @@ export const tryGetResourceAcl = (resourceDataset) => {
  * @param {*} baseResourceURL The URL of the unversioned resource
  * @param {*} metadataURL The URL pointing to the "description resource" of the base resource
  * @param {*} authFetch A function that can make authenticated fetch requests to the above resources
- * @returns A VERsioneD RESource DESCription SET that can be used to extract metadata info about a file
+ * @returns A versioned resource description set that can be used to extract metadata info about a file
  */
-export const getVerdResDescSet = async (podURL, baseResourceURL, metadataURL, authFetch) => {
+export const getVersionedResourceDescriptionSet = async (podURL, baseResourceURL, metadataURL, authFetch) => {
   // console.log(`Getting new metadata from ${metadataURL}`);
 
   let metaset = await getSolidDataset(metadataURL, { fetch: authFetch });
@@ -125,4 +120,24 @@ export const getVerdResDescSet = async (podURL, baseResourceURL, metadataURL, au
 
   // Return the valid (perhaps newly initialised) metaset
   return metaset;
+};
+
+export const extractAddressFromThing = (addressThing) => {
+  const addr = {
+    street: getStringNoLocale(addressThing, SCHEMA_INRUPT.streetAddress),
+    postalCode: getStringNoLocale(addressThing, SCHEMA_INRUPT.postalCode),
+    locality: getStringNoLocale(addressThing, SCHEMA_INRUPT.addressLocality),
+    region: getStringNoLocale(addressThing, SCHEMA_INRUPT.addressRegion),
+    country: getStringNoLocale(addressThing, SCHEMA_INRUPT.addressCountry),
+  };
+  if (
+    addr.street === null ||
+    addr.postalCode === null ||
+    addr.locality === null ||
+    addr.region === null ||
+    addr.country === null
+  ) {
+    return null;
+  }
+  return addr;
 };
