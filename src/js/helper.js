@@ -137,7 +137,7 @@ export const convertUnixToDatestring = (timestamp) => {
 /////                           Versioning Layer                           /////
 ////////////////////////////////////////////////////////////////////////////////
 
-const getVersionedDataset = async (baseURL, version, options) => {
+export const getVersionedDataset = async (baseURL, version, options) => {
 
   const metadata = await getURLMetadata(baseURL, options);
 
@@ -152,14 +152,20 @@ const getVersionedDataset = async (baseURL, version, options) => {
   }
 
   // Base case
-  if (version === 1) return getSolidDataset(baseURL, options);
+  if (version === metadata[hasVersionPredicate]) return {
+    dataset: await getSolidDataset(baseURL, options),
+    metadata: metadata
+  };
 
   // Versioned case
   const versionedURL = metadata[versionedInPredicate] + version;
-  return getSolidDataset(versionedURL, options);
+  return {
+    dataset: await getSolidDataset(versionedURL, options),
+    metadata: await getURLMetadata(versionedURL, options)
+  };
 };
 
-const getURLMetadata = async (url, options) => {
+export const getURLMetadata = async (url, options) => {
   // Get the metadata
   const baseDataset = await getResourceInfo(url, options);
   const linkedResources = getLinkedResourceUrlAll(baseDataset);

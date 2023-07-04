@@ -3,7 +3,7 @@ import { Button, Dialog, DialogActions, DialogTitle, TextField, Typography } fro
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { History, Search } from "@mui/icons-material";
 import React, { useContext, useEffect, useState } from "react";
-import { convertUnixToDatestring, displayError, extractAddressFromThing, tryGetResourceAcl } from "../js/helper";
+import { convertUnixToDatestring, displayError, extractAddressFromThing, getURLMetadata, getVersionedDataset, tryGetResourceAcl } from "../js/helper";
 import { createSolidDataset, deleteSolidDataset, getFile, getInteger, getLinkedResourceUrlAll, getResourceInfo, getSolidDataset, getSolidDatasetWithAcl, getStringNoLocale, getThing, getUrl, getUrlAll, saveAclFor, saveSolidDatasetAt, setAgentResourceAccess, setPublicResourceAccess } from "@inrupt/solid-client";
 import { hasVersionPredicate, shareAppWebID, sharedResourcePredicate, sharedResourcesURL, versionedInPredicate } from "../js/urls";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -14,7 +14,6 @@ import { POSIX } from "@inrupt/vocab-common-rdf";
 import { PodContext } from "../context/PodContext";
 import { QueryEngine } from "@comunica/query-sparql-solid";
 import { RequestContext } from "../context/RequestContext";
-import { VersionContextProvider } from "../context/VersionContext";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import useResponsiveWidth from "../js/useResponsiveWidth";
@@ -69,55 +68,26 @@ const AddressHistory = () => {
     setSearchWebidError("");
   }, [searchWebid]);
 
-  const getURLAddressAndVersions = async (datasetURL, thingURL = datasetURL) => {
+  const getURLAddressAndVersions = async (datasetURL) => {
+
+    const urlMetadata = await getURLMetadata(datasetURL, { fetch: session.fetch });
+    if (!urlMetadata[hasVersionPredicate]) urlMetadata[hasVersionPredicate] = 1;
+
     const urlAddresses = [];
+    for (let version = 1; version <= urlMetadata[hasVersionPredicate]; version++) {
+      const { dataset, metadata } = await getVersionedDataset(datasetURL, version, { fetch: session.fetch });
+      const datasetAddressThing = getThing(dataset, datasetURL);
 
-    // 1. Get base resource
-    const sharedURLDataset = await getSolidDataset(datasetURL, { fetch: session.fetch });
-    // TODO: Fix weird hash fragment shennanigans
-    const sharedAddressThing = getThing(sharedURLDataset, datasetURL + "#" + thingURL);
-    if (sharedAddressThing === null) {
-      console.log("Shared resource does not have address thing: ", thingURL, sharedURLDataset);
-      return [];
-    }
-
-    // 2. Get resource history
-    //   a. Get resource metadata
-    const linkedResources = getLinkedResourceUrlAll(sharedURLDataset);
-    const metadataURL = linkedResources["describedby"][0];
-    let metaset;
-    try {
-      metaset = await getSolidDataset(metadataURL, { fetch: session.fetch });
-    } catch (e) {
-      console.log("No metadata set");
-      return [];
-    }
-    const metathing = getThing(metaset, datasetURL);
-    if (metathing === null) {
-      console.log("No versions available for this file");
-      return [];
-    }
-
-    const modTime = getInteger(metathing, POSIX.mtime);
-    const address = { ...extractAddressFromThing(sharedAddressThing), versionDate: modTime };
-    if (address === null) {
-      console.log("No address present in shared file");
-      return [];
-    }
-    urlAddresses.push(address);
-
-    //   b. Get versions of the file (with addresses?) as well
-    const versionsLocation = getUrl(metathing, versionedInPredicate);
-    const versionsAvailable = getInteger(metathing, hasVersionPredicate);
-    if (versionsLocation === null || versionsAvailable === null) {
-      return urlAddresses;
-    }
-
-    for (let i = 1; i < versionsAvailable; i++) {
-      const versionURL = versionsLocation + i;
-      const versionAddress = await getURLAddressAndVersions(versionURL, datasetURL);
-      urlAddresses.push(...versionAddress);
-      console.log("TODO: Get address from " + versionURL);
+      if (datasetAddressThing === null) {
+        console.log("Shared resource does not have address thing: ", datasetURL, dataset);
+        return [];
+      }
+      const address = { ...extractAddressFromThing(datasetAddressThing), versionDate: metadata[POSIX.mtime] };
+      if (address === null) {
+        console.log("No address present in shared file");
+        return [];
+      }
+      urlAddresses.push(address);
     }
 
     return urlAddresses;
@@ -137,7 +107,7 @@ const AddressHistory = () => {
       return;
     }
 
-    const userSharedResourcesThing = getThing(sharedResourcesDataset, sharedResourcesURL + "#" + searchWebid);
+    const userSharedResourcesThing = getThing(sharedResourcesDataset, searchWebid);
     if (userSharedResourcesThing === null) {
       setSearchWebidError("WebID has shared no resources");
       return;
@@ -157,12 +127,15 @@ const AddressHistory = () => {
     }
     setPart(sharedURLs.length);
     // Push these out for display to the user
-    const indexMappedAddresses = userAddresses.sort((a, b) => a - b).map(
+
+    const indexMappedAddresses = userAddresses.sort((a, b) => b.versionDate - a.versionDate).map(
       (addr, index) => ({
         id: index,
         ...addr,
         versionDate: convertUnixToDatestring(addr.versionDate)
-      }));
+      })
+    );
+
     setAddressHistory(indexMappedAddresses);
   };
 

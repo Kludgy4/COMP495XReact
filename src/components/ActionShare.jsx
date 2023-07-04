@@ -55,13 +55,12 @@ export default function ActionShare() {
     // 5. Append the URL of the shared resource to an RDF file in the ShareApp pod to later be queried w/SPARQL
     let sharedResourcesDataset = await getSolidDataset(sharedResourcesURL, { fetch: session.fetch });
 
-    const thingFragment = sharedResourcesURL + "#" + session.info.webId;
-    let shareThing = getThing(sharedResourcesDataset, thingFragment);
-    if (shareThing === null) shareThing = createThing({ name: session.info.webId });
+    let shareThing = getThing(sharedResourcesDataset, session.info.webId);
+    if (shareThing === null) shareThing = createThing({ url: session.info.webId });
+
     shareThing = buildThing(shareThing).addUrl(sharedResourcePredicate, requestURL).build();
 
     sharedResourcesDataset = setThing(sharedResourcesDataset, shareThing);
-
     await saveSolidDatasetAt(sharedResourcesURL, sharedResourcesDataset, { fetch: session.fetch });
   };
 

@@ -46,6 +46,7 @@ export default function TreeNode({ resourceURL }) {
   const genAddrDatasetAt = async (addrDataset, url) => {
     const addrThing = genAddrThing(url);
     addrDataset = setThing(addrDataset, addrThing);
+    console.log(addrDataset, url);
     await saveSolidDatasetAt(url, addrDataset, { fetch: session.fetch });
 
   };

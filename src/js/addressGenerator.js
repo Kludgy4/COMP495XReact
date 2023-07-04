@@ -2,7 +2,7 @@ import { RDF, SCHEMA_INRUPT } from "@inrupt/vocab-common-rdf";
 import { buildThing, createThing } from "@inrupt/solid-client";
 
 export default function genAddrThing(addrResourceURL) {
-  return buildThing(createThing({name: addrResourceURL}))
+  return buildThing(createThing({url: addrResourceURL}))
     .setIri(RDF.type, SCHEMA_INRUPT.PostalAddress)
     .setStringNoLocale(SCHEMA_INRUPT.streetAddress, `${generateRandomNumber(1, 99)} ${getRandEl(names)} ${getRandEl(roadTypes)[1]}`)
     .setStringNoLocale(SCHEMA_INRUPT.postalCode, generateRandomNumber(1,9999).toString().padStart(4, "0"))
@@ -20,7 +20,7 @@ const roadTypes = Object.entries({
   "Close": "Cl",
   "Court": "Ct",
   "Crescent": "Cres",
-  "Cross": "Xing",
+  "Cross": "Cr",
   "Drive": "Dr",
   "Expressway": "Expy",
   "Freeway": "Fwy",
