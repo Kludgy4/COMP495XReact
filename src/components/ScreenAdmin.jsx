@@ -56,42 +56,39 @@ export default function ScreenAdmin() {
 
 const AddressHistory = () => {
 
+  const [addressHistory, setAddressHistory] = useState([]);
+
+  return (<>
+    <Typography variant="h5">WebID Address History</Typography>
+    <AddressHistorySearch setAddressHistory={setAddressHistory} />
+    <div style={{ minHeight: "400px" }}>
+      <DataGrid
+        rows={addressHistory}
+        columns={[
+          { field: "versionDate", headerName: "Version Date", flex: 1, sortable: true },
+          { field: "street", headerName: "Street", flex: 1, sortable: false },
+          { field: "postalCode", headerName: "Postcode", flex: 1, sortable: false },
+          { field: "locality", headerName: "Locality", flex: 1, sortable: false },
+          { field: "region", headerName: "Region", flex: 1, sortable: false },
+          { field: "country", headerName: "Country", flex: 1, sortable: false }
+        ]}
+        disableColumnSelector={true}
+      />
+    </div>
+  </>);
+};
+
+const AddressHistorySearch = ({ setAddressHistory }) => {
+
   const { session } = useSession();
   const { sendRequest, versionLocation } = useContext(RequestContext);
   const { podURL } = useContext(PodContext);
 
-  const [addressHistory, setAddressHistory] = useState([]);
   const [searchWebid, setSearchWebid] = useState("");
   const [searchWebidError, setSearchWebidError] = useState("");
+  useEffect(() => setSearchWebidError(""), [searchWebid]);
 
-  useEffect(() => {
-    setSearchWebidError("");
-  }, [searchWebid]);
 
-  const getURLAddressAndVersions = async (datasetURL) => {
-
-    const urlMetadata = await getURLMetadata(datasetURL, { fetch: session.fetch });
-    if (!urlMetadata[hasVersionPredicate]) urlMetadata[hasVersionPredicate] = 1;
-
-    const urlAddresses = [];
-    for (let version = 1; version <= urlMetadata[hasVersionPredicate]; version++) {
-      const { dataset, metadata } = await getVersionedDataset(datasetURL, version, { fetch: session.fetch });
-      const datasetAddressThing = getThing(dataset, datasetURL);
-
-      if (datasetAddressThing === null) {
-        console.log("Shared resource does not have address thing: ", datasetURL, dataset);
-        return [];
-      }
-      const address = { ...extractAddressFromThing(datasetAddressThing), versionDate: metadata[POSIX.mtime] };
-      if (address === null) {
-        console.log("No address present in shared file");
-        return [];
-      }
-      urlAddresses.push(address);
-    }
-
-    return urlAddresses;
-  };
 
   const [part, setPart] = useState(1);
   const [whole, setWhole] = useState(1);
@@ -139,8 +136,32 @@ const AddressHistory = () => {
     setAddressHistory(indexMappedAddresses);
   };
 
+  const getURLAddressAndVersions = async (datasetURL) => {
+
+    const urlMetadata = await getURLMetadata(datasetURL, { fetch: session.fetch });
+    if (!urlMetadata[hasVersionPredicate]) urlMetadata[hasVersionPredicate] = 1;
+
+    const urlAddresses = [];
+    for (let version = 1; version <= urlMetadata[hasVersionPredicate]; version++) {
+      const { dataset, metadata } = await getVersionedDataset(datasetURL, version, { fetch: session.fetch });
+      const datasetAddressThing = getThing(dataset, datasetURL);
+
+      if (datasetAddressThing === null) {
+        console.log("Shared resource does not have address thing: ", datasetURL, dataset);
+        return [];
+      }
+      const address = { ...extractAddressFromThing(datasetAddressThing), versionDate: metadata[POSIX.mtime] };
+      if (address === null) {
+        console.log("No address present in shared file");
+        return [];
+      }
+      urlAddresses.push(address);
+    }
+
+    return urlAddresses;
+  };
+
   return (<>
-    <Typography variant="h5">WebID Address History</Typography>
     <div style={{ display: "flex", flexDirection: "row", gap: "12px", width: "100%", alignItems: "flex-start" }}>
       <TextField
         fullWidth
@@ -164,31 +185,17 @@ const AddressHistory = () => {
       </div>
     </div>
     <LinearProgressWithLabel part={part} whole={whole} />
-    <div style={{ minHeight: "400px" }}>
-      <DataGrid
-        rows={addressHistory}
-        columns={[
-          { field: "versionDate", headerName: "Version Date", flex: 1, sortable: true },
-          { field: "street", headerName: "Street", flex: 1, sortable: false },
-          { field: "postalCode", headerName: "Postcode", flex: 1, sortable: false },
-          { field: "locality", headerName: "Locality", flex: 1, sortable: false },
-          { field: "region", headerName: "Region", flex: 1, sortable: false },
-          { field: "country", headerName: "Country", flex: 1, sortable: false }
-        ]}
-        disableColumnSelector={true}
-      />
-    </div>
   </>);
 };
 
 const AddressAtDate = () => {
 
+  const [userAddresses, setUserAddresses] = useState([]);
+
   const [searchDate, setSearchDate] = useState(dayjs());
   const searchAddressDate = () => {
     console.log("searching " + dayjs(searchDate).toString());
   };
-
-  const [userAddresses, setUserAddresses] = useState([]);
 
   return (<>
     <Typography variant="h5">Address of All Users at Date</Typography>
