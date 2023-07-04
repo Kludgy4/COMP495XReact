@@ -14,6 +14,7 @@ import { POSIX } from "@inrupt/vocab-common-rdf";
 import { PodContext } from "../context/PodContext";
 import { QueryEngine } from "@comunica/query-sparql-solid";
 import { RequestContext } from "../context/RequestContext";
+import { VersionContextProvider } from "../context/VersionContext";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import useResponsiveWidth from "../js/useResponsiveWidth";

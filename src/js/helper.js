@@ -1,22 +1,8 @@
+import { DCTERMS, POSIX, RDF, SCHEMA_INRUPT } from "@inrupt/vocab-common-rdf";
 import {
-  buildThing,
-  createAclFromFallbackAcl,
-  createContainerAt,
-  createContainerInContainer,
-  getInteger,
-  getResourceAcl,
-  getSolidDataset,
-  getStringNoLocale,
-  getThing,
-  getUrl,
-  hasAccessibleAcl,
-  hasFallbackAcl,
-  hasResourceAcl,
-  saveSolidDatasetAt,
-  setThing
+  buildThing, createAclFromFallbackAcl, createContainerAt, createContainerInContainer, getInteger, getLinkedResourceUrlAll, getResourceAcl, getResourceInfo, getSolidDataset, getStringNoLocale, getThing, getUrl, hasAccessibleAcl, hasFallbackAcl, hasResourceAcl, saveSolidDatasetAt, setThing
 } from "@inrupt/solid-client";
-import { hasVersionPredicate, versionedInPredicate } from "./urls";
-import { SCHEMA_INRUPT } from "@inrupt/vocab-common-rdf";
+import { contentTypePredicate, hasVersionPredicate, versionedInPredicate } from "./urls";
 import dayjs from "dayjs";
 import { enqueueSnackbar } from "notistack";
 
@@ -145,4 +131,54 @@ export const extractAddressFromThing = (addressThing) => {
 
 export const convertUnixToDatestring = (timestamp) => {
   return dayjs.unix(timestamp).locale("en-au").format("DD/MM/YYYY HH:mm:ss");
+};
+
+////////////////////////////////////////////////////////////////////////////////
+/////                           Versioning Layer                           /////
+////////////////////////////////////////////////////////////////////////////////
+
+const getVersionedDataset = async (baseURL, version, options) => {
+
+  const metadata = await getURLMetadata(baseURL, options);
+
+  // The resource requested is not available if
+  if (
+    //   a. A versioning predicate is not available and anything but version 1 is requested
+    (!metadata[hasVersionPredicate] || !metadata[versionedInPredicate]) && version !== 1 ||
+    //   b. The version requested is outside of the available bounds
+    version < 1 || version > metadata[hasVersionPredicate]
+  ) {
+    throw new Error("Requested resource version does not exist");
+  }
+
+  // Base case
+  if (version === 1) return getSolidDataset(baseURL, options);
+
+  // Versioned case
+  const versionedURL = metadata[versionedInPredicate] + version;
+  return getSolidDataset(versionedURL, options);
+};
+
+const getURLMetadata = async (url, options) => {
+  // Get the metadata
+  const baseDataset = await getResourceInfo(url, options);
+  const linkedResources = getLinkedResourceUrlAll(baseDataset);
+  const metadataURL = linkedResources["describedby"][0];
+
+  const metaset = await getSolidDataset(metadataURL, options);
+  const metathing = getThing(metaset, url);
+  if (metathing === null) {
+    throw new Error("No description resource metadata available");
+  }
+
+  // Extract the metadata into a convenient format
+  return {
+    [hasVersionPredicate]: getInteger(metathing, hasVersionPredicate),
+    [versionedInPredicate]: getUrl(metathing, versionedInPredicate),
+    [RDF.type]: getUrl(metathing, RDF.type),
+    [DCTERMS.modified]: getInteger(metathing, DCTERMS.modified),
+    [contentTypePredicate]: getStringNoLocale(metathing, contentTypePredicate),
+    [POSIX.mtime]: getInteger(metathing, POSIX.mtime),
+    [POSIX.size]: getInteger(metathing, POSIX.size)
+  };
 };

@@ -9,3 +9,6 @@ export const hasVersionPredicate = "https://client-comp495x.duckdns.org/ns/hasVe
 
 // Predicates used to share versioned resources from a pod
 export const sharedResourcePredicate = "https://client-comp495x.duckdns.org/ns/sharedResource";
+
+// Not provided
+export const contentTypePredicate = "http://www.w3.org/ns/ma-ont#format";
