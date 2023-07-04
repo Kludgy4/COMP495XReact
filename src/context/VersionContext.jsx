@@ -1,6 +1,6 @@
 import { DCTERMS, POSIX, RDF } from "@inrupt/vocab-common-rdf";
 import React, { createContext, useState } from "react";
-import { getInteger, getLinkedResourceUrlAll, getSolidDataset, getStringNoLocale, getThing, getUrl } from "@inrupt/solid-client";
+import { getInteger, getLinkedResourceUrlAll, getResourceInfo, getSolidDataset, getStringNoLocale, getThing, getUrl } from "@inrupt/solid-client";
 import { hasVersionPredicate, versionedInPredicate } from "../js/urls";
 import { displayError } from "../js/helper";
 import { getSpaceUntilMaxLength } from "@testing-library/user-event/dist/utils";
@@ -11,16 +11,12 @@ export const VersionContext = createContext({
   getAvailableVersions: (baseURL) => undefined,
 });
 
-// TODO: Cache invalidation
-// metadata cache
-const versioningMetadata = {};
-
 export const VersionContextProvider = ({ children, initial = localStorage.getItem("podURL") }) => {
-  // TODO: Am I using the non react state cache correctly? Or should I swap to non-cache?
-  // https://stackoverflow.com/questions/57444154/why-need-useref-and-not-mutable-variable
+
   const getVersionedDataset = async (baseURL, version, options) => {
 
-    const metadata = await getCachedMetadata(baseURL, options);
+    const metadata = await getURLMetadata(baseURL, options);
+
     // The resource requested is not available if
     if (
       //   a. The version requested is outside of the available bounds
@@ -51,20 +47,9 @@ export const VersionContextProvider = ({ children, initial = localStorage.getIte
   );
 };
 
-const invalidateCachedMetadata = (baseURL) => delete versioningMetadata.baseURL;
-const getCachedMetadata = async (baseURL, options) => {
-  let metadata = versioningMetadata[baseURL];
-  if (!metadata) {
-    // Resource has not yet been retrieved
-    metadata = await getURLMetadata(baseURL);
-    versioningMetadata[baseURL] = metadata;
-  }
-  return metadata;
-};
-
 const getURLMetadata = async (url, options) => {
   // Get the metadata
-  const baseDataset = await getSolidDataset(url, options);
+  const baseDataset = await getResourceInfo(url, options);
   const linkedResources = getLinkedResourceUrlAll(baseDataset);
   const metadataURL = linkedResources["describedby"][0];
 
