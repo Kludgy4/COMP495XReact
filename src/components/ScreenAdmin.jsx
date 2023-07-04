@@ -63,9 +63,6 @@ const AddressHistory = () => {
   const [addressHistory, setAddressHistory] = useState([]);
   const [searchWebid, setSearchWebid] = useState("");
   const [searchWebidError, setSearchWebidError] = useState("");
-  const changeSearchWebid = (event) => {
-    setSearchWebid(event.target.value);
-  };
 
   useEffect(() => {
     setSearchWebidError("");
@@ -174,7 +171,7 @@ const AddressHistory = () => {
       <TextField
         fullWidth
         value={searchWebid}
-        onChange={changeSearchWebid}
+        onChange={e => setSearchWebid(e.target.value)}
         placeholder="https://comp495x.duckdns.org/ExamplePod/profile/card#me"
         error={searchWebidError !== ""}
         helperText={searchWebidError}
