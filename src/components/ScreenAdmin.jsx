@@ -3,9 +3,9 @@ import { Button, Dialog, DialogActions, DialogTitle, TextField, Typography } fro
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { History, Search } from "@mui/icons-material";
 import React, { useContext, useEffect, useState } from "react";
-import { convertUnixToDatestring, displayError, extractAddressFromThing, getURLMetadata, getVersionedDataset, tryGetResourceAcl } from "../js/helper";
-import { createSolidDataset, deleteSolidDataset, getFile, getInteger, getLinkedResourceUrlAll, getResourceInfo, getSolidDataset, getSolidDatasetWithAcl, getStringNoLocale, getThing, getUrl, getUrlAll, saveAclFor, saveSolidDatasetAt, setAgentResourceAccess, setPublicResourceAccess } from "@inrupt/solid-client";
-import { hasVersionPredicate, shareAppWebID, sharedResourcePredicate, sharedResourcesURL, versionedInPredicate } from "../js/urls";
+import { addressObjToString, convertUnixToDatestring, displayError, getURLAddressAndVersions, tryGetResourceAcl } from "../js/helper";
+import { createSolidDataset, deleteSolidDataset, getFile, getSolidDataset, getSolidDatasetWithAcl, getStringNoLocale, getThing, getThingAll, getUrl, getUrlAll, saveAclFor, saveSolidDatasetAt, setAgentResourceAccess, setPublicResourceAccess } from "@inrupt/solid-client";
+import { hasVersionPredicate, shareAppWebID, sharedResourcePredicate, sharedResourcesURL } from "../js/urls";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import ContextLogoutButton from "./ContextLogoutButton";
 import { DataGrid } from "@mui/x-data-grid";
@@ -73,6 +73,8 @@ const AddressHistory = () => {
           { field: "country", headerName: "Country", flex: 1, sortable: false }
         ]}
         disableColumnSelector={true}
+        initialState={{pagination: { paginationModel: { pageSize: 5 } }}}
+        pageSizeOptions={[5, 10, 25]}
       />
     </div>
   </>);
@@ -81,14 +83,10 @@ const AddressHistory = () => {
 const AddressHistorySearch = ({ setAddressHistory }) => {
 
   const { session } = useSession();
-  const { sendRequest, versionLocation } = useContext(RequestContext);
-  const { podURL } = useContext(PodContext);
 
   const [searchWebid, setSearchWebid] = useState("");
   const [searchWebidError, setSearchWebidError] = useState("");
   useEffect(() => setSearchWebidError(""), [searchWebid]);
-
-
 
   const [part, setPart] = useState(1);
   const [whole, setWhole] = useState(1);
@@ -99,7 +97,7 @@ const AddressHistorySearch = ({ setAddressHistory }) => {
     try {
       sharedResourcesDataset = await getSolidDataset(sharedResourcesURL, { fetch: session.fetch });
     } catch (e) {
-      setSearchWebidError("WebID Invalid");
+      setSearchWebidError("sharedResources.ttl inaccessible");
       displayError(e.message);
       return;
     }
@@ -118,7 +116,7 @@ const AddressHistorySearch = ({ setAddressHistory }) => {
     // TODO: Do this asynchronously for performance
     const userAddresses = [];
     for (const sharedURL of sharedURLs) {
-      const sharedAddresses = await getURLAddressAndVersions(sharedURL);
+      const sharedAddresses = await getURLAddressAndVersions(sharedURL, { fetch: session.fetch });
       if (sharedAddresses) userAddresses.push(...sharedAddresses);
       setPart(++numSharedParsed);
     }
@@ -134,31 +132,6 @@ const AddressHistorySearch = ({ setAddressHistory }) => {
     );
 
     setAddressHistory(indexMappedAddresses);
-  };
-
-  const getURLAddressAndVersions = async (datasetURL) => {
-
-    const urlMetadata = await getURLMetadata(datasetURL, { fetch: session.fetch });
-    if (!urlMetadata[hasVersionPredicate]) urlMetadata[hasVersionPredicate] = 1;
-
-    const urlAddresses = [];
-    for (let version = 1; version <= urlMetadata[hasVersionPredicate]; version++) {
-      const { dataset, metadata } = await getVersionedDataset(datasetURL, version, { fetch: session.fetch });
-      const datasetAddressThing = getThing(dataset, datasetURL);
-
-      if (datasetAddressThing === null) {
-        console.log("Shared resource does not have address thing: ", datasetURL, dataset);
-        return [];
-      }
-      const address = { ...extractAddressFromThing(datasetAddressThing), versionDate: metadata[POSIX.mtime] };
-      if (address === null) {
-        console.log("No address present in shared file");
-        return [];
-      }
-      urlAddresses.push(address);
-    }
-
-    return urlAddresses;
   };
 
   return (<>
@@ -192,41 +165,113 @@ const AddressAtDate = () => {
 
   const [userAddresses, setUserAddresses] = useState([]);
 
-  const [searchDate, setSearchDate] = useState(dayjs());
-  const searchAddressDate = () => {
-    console.log("searching " + dayjs(searchDate).toString());
-  };
-
   return (<>
     <Typography variant="h5">Address of All Users at Date</Typography>
-
-    <div style={{ display: "flex", flexDirection: "row", gap: "12px" }}>
-      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en-gb">
-        <DatePicker
-          value={searchDate}
-          onChange={newDate => setSearchDate(newDate)}
-        />
-      </LocalizationProvider>
-      <Button
-        variant="contained"
-        size="small"
-        startIcon={<Search />}
-        onClick={searchAddressDate}
-      >
-        Search
-      </Button>
-    </div>
+    <AddressAtDateSearch setUserAddresses={setUserAddresses} />
     <div style={{ minHeight: "400px" }}>
       <DataGrid
         rows={userAddresses}
         columns={[
           { field: "webid", headerName: "WebID", flex: 2, sortable: true },
-          { field: "address", headerName: "Home Address", flex: 1, sortable: false },
+          { field: "address", headerName: "Home Address", flex: 2, sortable: false },
+          { field: "dateRange", headerName: "Stay Duration", flex: 1, sortable: false },
         ]}
         disableColumnSelector={true}
+        initialState={{pagination: { paginationModel: { pageSize: 5 } }}}
+        pageSizeOptions={[5, 10]}
       />
     </div>
   </>);
+};
+
+const AddressAtDateSearch = ({ setUserAddresses }) => {
+
+  const { session } = useSession();
+
+  const [searchDate, setSearchDate] = useState(dayjs());
+  const [searchDateError, setSearchDateError] = useState("");
+  const [part, setPart] = useState(1);
+  const [whole, setWhole] = useState(1);
+
+  const searchAddressDate = async () => {
+    setUserAddresses([]);
+
+    // Retrieve all urls shared by the selected user with ShareApp 
+    let sharedResourcesDataset;
+    try {
+      sharedResourcesDataset = await getSolidDataset(sharedResourcesURL, { fetch: session.fetch });
+    } catch (e) {
+      setSearchDateError("sharedResources.ttl inaccessible");
+      displayError(e.message);
+      return;
+    }
+
+    const sharedWebids = getThingAll(sharedResourcesDataset);
+    setPart(0);
+    setWhole(sharedWebids.length);
+
+    const userAddresses = [];
+    for (const webidThing of sharedWebids) {
+      const webidAddress = {
+        webid: webidThing.url,
+        address: "",
+        dateRange: "",
+      };
+
+      // Iterate over all shared resources
+      const sharedResources = getUrlAll(webidThing, sharedResourcePredicate);
+      let webidAddresses = [];
+      for (const sharedResource of sharedResources) {
+        const sharedResourceAddresses = await getURLAddressAndVersions(sharedResource, { fetch: session.fetch });
+        webidAddresses.push(...sharedResourceAddresses);
+      }
+
+      webidAddresses = webidAddresses.sort((a, b) => a.versionDate - b.versionDate);
+
+      // Find correct address for given time/date
+      // console.log("searching " + dayjs(searchDate).toString());
+      const searchTimestamp = dayjs(searchDate).unix();
+      const datedAddrIndex = webidAddresses.findIndex(addr => searchTimestamp >= addr.versionDate);
+
+      if (datedAddrIndex !== -1) {
+        webidAddress["address"] = addressObjToString(webidAddresses[datedAddrIndex]);
+        const f = "DD/MM/YYYY";
+        if (datedAddrIndex < webidAddresses.length - 1) {
+          webidAddress["dateRange"] = dayjs(webidAddresses[datedAddrIndex].dateRange).format(f) + " - " + dayjs(webidAddresses[datedAddrIndex + 1].dateRange).format(f);
+        } else {
+          webidAddress["dateRange"] = dayjs(webidAddresses[datedAddrIndex].dateRange).format(f) + " - " + dayjs().format(f);
+        }
+      }
+
+      userAddresses.push(webidAddress);
+
+      setPart(userAddresses.length);
+    }
+    setUserAddresses(userAddresses.map((a, index) => ({ id: index, ...a })));
+    setPart(sharedWebids.length);
+  };
+
+  return (
+    <>
+      <div style={{ display: "flex", flexDirection: "row", gap: "12px" }}>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en-gb">
+          <DatePicker
+            value={searchDate}
+            onChange={newDate => setSearchDate(newDate)}
+          />
+        </LocalizationProvider>
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<Search />}
+          onClick={searchAddressDate}
+        >
+          Search
+        </Button>
+      </div>
+      <LinearProgressWithLabel part={part} whole={whole} />
+    </>
+  );
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -134,6 +134,40 @@ export const convertUnixToDatestring = (timestamp) => {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+/////                             Address Layer                            /////
+////////////////////////////////////////////////////////////////////////////////
+
+export const getURLAddressAndVersions = async (datasetURL, options) => {
+
+  const urlMetadata = await getURLMetadata(datasetURL, options);
+  if (!urlMetadata[hasVersionPredicate]) urlMetadata[hasVersionPredicate] = 1;
+
+  const urlAddresses = [];
+  for (let version = 1; version <= urlMetadata[hasVersionPredicate]; version++) {
+    const { dataset, metadata } = await getVersionedDataset(datasetURL, version, options);
+    const datasetAddressThing = getThing(dataset, datasetURL);
+
+    if (datasetAddressThing === null) {
+      console.log("Shared resource does not have address thing: ", datasetURL, dataset);
+      return [];
+    }
+    const address = { ...extractAddressFromThing(datasetAddressThing), versionDate: metadata[POSIX.mtime] };
+    if (address === null) {
+      console.log("No address present in shared file");
+      return [];
+    }
+    urlAddresses.push(address);
+  }
+
+  return urlAddresses;
+};
+
+export const addressObjToString = (o) => {
+  return `${o.street}, ${o.locality} ${o.postalCode}, ${o.region}, ${o.country}`;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
 /////                           Versioning Layer                           /////
 ////////////////////////////////////////////////////////////////////////////////
 

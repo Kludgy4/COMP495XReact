@@ -7,10 +7,11 @@
   },
   "eslint.validate": ["javascript", "javascriptreact"],
   "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  "files.autoSave": "off",
   "editor.formatOnSave": true,
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
-  }
+  },
 }
