@@ -3,6 +3,7 @@ import {
   buildThing, createAclFromFallbackAcl, createContainerAt, createContainerInContainer, getInteger, getLinkedResourceUrlAll, getResourceAcl, getResourceInfo, getSolidDataset, getStringNoLocale, getThing, getUrl, hasAccessibleAcl, hasFallbackAcl, hasResourceAcl, saveSolidDatasetAt, setThing
 } from "@inrupt/solid-client";
 import { contentTypePredicate, hasVersionPredicate, versionedInPredicate } from "./urls";
+import { getVersionedDataset, getVersionedDatasetHandle } from "./versioningLayer";
 import dayjs from "dayjs";
 import { enqueueSnackbar } from "notistack";
 
@@ -139,19 +140,19 @@ export const convertUnixToDatestring = (timestamp) => {
 
 export const getURLAddressAndVersions = async (datasetURL, options) => {
 
-  const urlMetadata = await getURLMetadata(datasetURL, options);
-  if (!urlMetadata[hasVersionPredicate]) urlMetadata[hasVersionPredicate] = 1;
+  const datasetHandle = await getVersionedDatasetHandle(datasetURL, options);
+  const hasVersion = datasetHandle.meta.hasVersion !== null ? datasetHandle.meta.hasVersion : 1;
 
   const urlAddresses = [];
-  for (let version = 1; version <= urlMetadata[hasVersionPredicate]; version++) {
-    const { dataset, metadata } = await getVersionedDataset(datasetURL, version, options);
-    const datasetAddressThing = getThing(dataset, datasetURL);
+  for (let version = 1; version <= hasVersion; version++) {
+    const { dataset, handle } = await getVersionedDataset(datasetHandle, version, options);
 
+    const datasetAddressThing = getThing(dataset, datasetURL);
     if (datasetAddressThing === null) {
       console.log("Shared resource does not have address thing: ", datasetURL, dataset);
       return [];
     }
-    const address = { ...extractAddressFromThing(datasetAddressThing), versionDate: metadata[POSIX.mtime] };
+    const address = { ...extractAddressFromThing(datasetAddressThing), versionDate: handle.meta.mtime };
     if (address === null) {
       console.log("No address present in shared file");
       return [];
@@ -170,7 +171,7 @@ export const addressObjToString = (o) => {
 ////////////////////////////////////////////////////////////////////////////////
 /////                           Versioning Layer                           /////
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 export const getVersionedDataset = async (baseURL, version, options) => {
 
   const metadata = await getURLMetadata(baseURL, options);
@@ -222,3 +223,4 @@ export const getURLMetadata = async (url, options) => {
     [POSIX.size]: getInteger(metathing, POSIX.size)
   };
 };
+*/

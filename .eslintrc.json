@@ -1,10 +1,12 @@
 {
   "root": true,
-  "env": {
-    "browser": true,
-    "es2021": true
-  },
-  "extends": ["eslint:recommended", "plugin:react/recommended"],
+  "parser": "@typescript-eslint/parser",
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
   "parserOptions": {
     "ecmaVersion": 12,
     "ecmaFeatures": {
@@ -12,7 +14,11 @@
     },
     "sourceType": "module"
   },
-  "plugins": ["react"],
+  "plugins": ["react", "@typescript-eslint"],
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
   "rules": {
     "indent": ["error", 2],
     "linebreak-style": ["error", "unix"],
@@ -23,6 +29,7 @@
     "comma-dangle": 0,
     "react/prop-types": 0,
     "no-unused-vars": 0,
+    "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx", ".ts", ".tsx"] }],
     "sort-imports": [
       "error",
       {
