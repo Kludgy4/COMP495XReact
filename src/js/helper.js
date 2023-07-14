@@ -72,7 +72,7 @@ export const getVersionedResourceDescriptionSet = async (podURL, baseResourceURL
     metaset = await saveSolidDatasetAt(metadataURL, metaset, { fetch: authFetch });
   }
 
-  // Retrieve the resource versioing location
+  // Retrieve the resource versioning location
   const resourceVersionLocation = getUrl(metathing, versionedInPredicate);
   if (resourceVersionLocation === null) {
     // No location is currently provisioned for this resource, so provision one and add location as metadata

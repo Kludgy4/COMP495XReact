@@ -27,6 +27,19 @@ export const RequestContext = createContext({
 
 export const RequestContextProvider = ({ children }) => {
 
+  const resetState = () => {
+    setResHeaders({ headers: new Headers(), url: "" });
+    setBody("");
+    setMetadataRequest({ url: "" });
+    setCurrentVersion(0);
+    setVersionLocation("");
+    setDisplayVersion(-1);
+
+    setMetadataThing(null);
+    setResourceBlob(new Blob());
+    setVersionMeta({ versionedIn: "", hasVersion: -1 });
+  };
+
   ////////////////////////////////////////////////////////////////////////////////
   /////                             Base Request                             /////
   ////////////////////////////////////////////////////////////////////////////////
@@ -36,7 +49,9 @@ export const RequestContextProvider = ({ children }) => {
   // ENTRY POINT for requesting new resources
   const sendRequest = (url, version = -1) => { setVersionedRequest({ url, version }); return null; };
   // If a new resource is requested, fetch it for display
-  useEffect(() => { if (versionedRequest.url !== "") { fetchResource(); } }, [versionedRequest]);
+  useEffect(() => {
+    if (versionedRequest.url !== "") fetchResource(); else resetState();
+  }, [versionedRequest]);
 
   const [resourceBlob, setResourceBlob] = useState(new Blob());
   const [body, setBody] = useState("");

@@ -37,6 +37,7 @@ export const getVersionedDatasetHandle = async (url: string, options) => {
   // Extract the metadata into a convenient format
   return {
     baseURL: url,
+    baseResourceInfo: baseDataset,
     meta: {
       hasVersion: getInteger(metathing, hasVersionPredicate),
       versionedIn: getUrl(metathing, versionedInPredicate),
@@ -45,7 +46,7 @@ export const getVersionedDatasetHandle = async (url: string, options) => {
       contentType: getStringNoLocale(metathing, contentTypePredicate),
       mtime: getInteger(metathing, POSIX.mtime),
       size: getInteger(metathing, POSIX.size)
-    }
+    },
   };
 };
 
