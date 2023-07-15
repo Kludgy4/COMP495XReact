@@ -1,8 +1,13 @@
-import { InputLabel, MenuItem, Paper, Select, Switch, Typography } from "@mui/material";
+import { InputLabel, MenuItem, Paper, Select, Switch, TextField, Typography } from "@mui/material";
 import React, { useContext, useEffect, useState } from "react";
+import { ContentEditable } from "@lexical/react/LexicalContentEditable";
+import { LexicalComposer } from "@lexical/react/LexicalComposer";
+import LexicalErrorBoundary from "@lexical/react/LexicalErrorBoundary";
+import { PlainTextPlugin } from "@lexical/react/LexicalPlainTextPlugin";
 import ReactMarkdown from "react-markdown";
 import { RequestContext } from "../context/RequestContext";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { displayError } from "../js/helper";
 import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 export default function ResourceDisplay({ width }) {
@@ -59,15 +64,57 @@ export default function ResourceDisplay({ width }) {
       {resourceBody === "" ? (
         <Typography>This resource is either empty, or not plaintext. It cannot be previewed...</Typography>
       ) : (
-        <SyntaxHighlighter
-          id="syntax"
-          language={highlightLanguage}
-          showLineNumbers={true}
-          style={materialDark}
-        >
-          {editorText}
-        </SyntaxHighlighter>
-      )}
-    </Paper>
+        editing ? (
+          <Editor />
+          // <TextField
+          //   multiline
+          //   value={editorText}
+          //   fullWidth
+          //   style={{ overflow: "scroll", height: "100%", whiteSpace: "pre" }}
+          // >
+          //   editor
+          // </TextField>
+        ) : (
+          <SyntaxHighlighter
+            id="syntax"
+            language={highlightLanguage}
+            showLineNumbers={true}
+            style={materialDark}
+          >
+            {editorText}
+          </SyntaxHighlighter>
+        ))
+      }
+    </Paper >
   );
 }
+
+const Editor = () => {
+
+  const theme = {};
+
+  const onError = (error) => displayError(error);
+
+  const initialConfig = {
+    namespace: "MyEditor",
+    theme,
+    onError
+  };
+
+  return (
+    <LexicalComposer initialConfig={initialConfig}>
+      <PlainTextPlugin
+        contentEditable={
+          <ContentEditable
+            style={{
+              height: "100%",
+              width: "100%",
+              padding: "12px",
+              border: "1px solid white"
+            }}
+          />}
+        ErrorBoundary={LexicalErrorBoundary}
+      />
+    </LexicalComposer>
+  );
+};
