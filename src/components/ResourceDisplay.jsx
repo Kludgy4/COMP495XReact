@@ -1,12 +1,25 @@
-import { InputLabel, MenuItem, Paper, Select, Typography } from "@mui/material";
-import React, { useContext, useState } from "react";
+import { InputLabel, MenuItem, Paper, Select, Switch, Typography } from "@mui/material";
+import React, { useContext, useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { RequestContext } from "../context/RequestContext";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 export default function ResourceDisplay({ width }) {
-  const { displayVersion, resourceBody } = useContext(RequestContext);
+  const { displayVersion, resourceBody, currentVersion } = useContext(RequestContext);
+
+  const [canEdit, setCanEdit] = useState(false);
+  useEffect(() => {
+    // Can only edit the latest version
+    setCanEdit(displayVersion === currentVersion);
+  }, [displayVersion, currentVersion]);
+
+  const [editorText, setEditorText] = useState("");
+  useEffect(() => {
+    if (canEdit) {
+      setEditorText(resourceBody);
+    }
+  }, [resourceBody, canEdit]);
 
   const [highlightLanguage, setHighlightLanguage] = useState("turtle");
 
@@ -14,9 +27,23 @@ export default function ResourceDisplay({ width }) {
     setHighlightLanguage(event.target.value);
   };
 
+  const [editing, setEditing] = useState(false);
+  const handleEditingChange = (event) => {
+    setEditing(event.target.checked);
+  };
+
   return (
     <Paper className="resourceDisplay" square style={{ width: width }} elevation={0}>
       <div id="filePreviewInfo">
+        {canEdit &&
+          <div className="filePreviewInfoBox">
+            <Switch
+              checked={editing}
+              onChange={handleEditingChange}
+              inputProps={{ "aria-label": "controlled" }}
+            />
+          </div>
+        }
         <div className="filePreviewInfoBox">
           <Typography variant="subtitle1">Version: {displayVersion}</Typography>
         </div>
@@ -29,14 +56,16 @@ export default function ResourceDisplay({ width }) {
           </Select>
         </div>
       </div>
-      {resourceBody === "" ? (<Typography>This resource is either empty, or not plaintext. It cannot be previewed...</Typography>) : (
+      {resourceBody === "" ? (
+        <Typography>This resource is either empty, or not plaintext. It cannot be previewed...</Typography>
+      ) : (
         <SyntaxHighlighter
           id="syntax"
           language={highlightLanguage}
           showLineNumbers={true}
           style={materialDark}
         >
-          {resourceBody}
+          {editorText}
         </SyntaxHighlighter>
       )}
     </Paper>
