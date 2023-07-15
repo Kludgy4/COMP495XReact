@@ -14,26 +14,27 @@ import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 export default function ResourceDisplay({ width }) {
   const { requestURL, displayVersion, resourceBody, currentVersion, sendRequest } = useContext(RequestContext);
 
+  const [highlightLanguage, setHighlightLanguage] = useState("turtle");
+
   const [canEdit, setCanEdit] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editorText, setEditorText] = useState("");
+
   useEffect(() => {
     // Can only edit the latest version
     setCanEdit(displayVersion === currentVersion);
   }, [displayVersion, currentVersion]);
 
-  const [editorText, setEditorText] = useState("");
   useEffect(() => {
-    if (canEdit) {
+    if (canEdit || editing) {
       setEditorText(resourceBody);
     }
-  }, [resourceBody, canEdit]);
-
-  const [highlightLanguage, setHighlightLanguage] = useState("turtle");
+  }, [resourceBody, canEdit, editing]);
 
   const handleLanguageChange = (event) => {
     setHighlightLanguage(event.target.value);
   };
 
-  const [editing, setEditing] = useState(false);
   const handleEditingChange = (event) => {
     setEditing(event.target.checked);
   };
@@ -44,6 +45,10 @@ export default function ResourceDisplay({ width }) {
 
   const saveUpdatedFile = () => {
     console.log(`Saving\n${editorText}\nat\n${requestURL}`);
+    // TODO: update metadata to include the current user
+
+    // Update the file
+
     setEditing(false);
     sendRequest(requestURL);
   };
@@ -78,9 +83,7 @@ export default function ResourceDisplay({ width }) {
           </Select>
         </div>
       </div>
-      {resourceBody === "" ? (
-        <Typography>This resource is either empty, or not plaintext. It cannot be previewed...</Typography>
-      ) : (
+      {
         editing ? (
           // <Editor onChange={handleEditorTextChange} initText={editorText}/>
           <TextField
@@ -95,6 +98,9 @@ export default function ResourceDisplay({ width }) {
           >
             editor
           </TextField>
+        ) : resourceBody === "" ? (
+          <Typography>This resource is either empty, or not plaintext. It cannot be previewed...</Typography>
+
         ) : (
           <SyntaxHighlighter
             id="syntax"
@@ -104,8 +110,38 @@ export default function ResourceDisplay({ width }) {
           >
             {resourceBody}
           </SyntaxHighlighter>
-        ))
+        )
+
       }
+
+      {/* {
+        resourceBody === "" ? (
+        ): (
+          editing? (
+              // <Editor onChange={handleEditorTextChange} initText={editorText}/>
+              <TextField
+      multiline
+      value = { editorText }
+      fullWidth
+      style = {{
+                overflow: "scroll",
+                height: "100%"
+              }}
+      onChange={handleEditorTextChange}
+    >
+      editor
+    </TextField>
+  ) : (
+    <SyntaxHighlighter
+      id="syntax"
+      language={highlightLanguage}
+      showLineNumbers={true}
+      style={materialDark}
+    >
+      {resourceBody}
+    </SyntaxHighlighter>
+  )) 
+}*/}
     </Paper >
   );
 }
