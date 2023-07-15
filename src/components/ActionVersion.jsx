@@ -121,6 +121,8 @@ export default function ActionVersion() {
           </Button>
         </DialogActions>
       </Dialog>
+      <Typography variant="body1">Contributors: </Typography>
+      <Typography variant="body2">No edits made yet... </Typography>
     </ >
   );
 }

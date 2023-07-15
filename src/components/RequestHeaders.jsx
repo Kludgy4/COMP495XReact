@@ -15,7 +15,7 @@ export default function RequestHeaders() {
   const { responseHeaders } = useContext(RequestContext);
 
   return (
-    <Paper className="requestHeaders" style={{ height: "100%" }} elevation={2}>
+    <Paper className="requestHeaders" style={{ height: "calc(0.25*(100vh - 64px))" }} elevation={2}>
       <div id="headersContent" style={{ overflow: "auto", overflowWrap: "normal" }}>
         <div className="metasection">
           <Typography className="metatitle" variant="subtitle1">General</Typography>

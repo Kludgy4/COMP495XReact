@@ -25,7 +25,7 @@ export default function ScreenUser() {
 
   return (
     <div id="mainContent" style={{ height: "calc(100vh - 64px)" }}>
-      <div id="podContent">
+      <div id="podContent" style={{ height: "calc(0.75*(100vh - 64px))" }}>
         <PodHierarchy width={leftWidth} />
         <ResourceActions width={rightWidth} />
         <ResourceDisplay width={middleWidth} />
