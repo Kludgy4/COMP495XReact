@@ -17,9 +17,11 @@ export const RequestContext = createContext({
   metadataURL: "",
   hasVersion: 0,
   versionLocation: "",
-  displayVersion: -1
+  displayVersion: -1,
+  contentType: "",
+  contributors: []
 });
-
+// TODO: TODO: TODO: TODO: Remove most of these and just pass back the handle
 
 export const RequestContextProvider = ({ children }) => {
 
@@ -30,6 +32,8 @@ export const RequestContextProvider = ({ children }) => {
     setVersionLocation("");
     setDisplayVersion(-1);
     setMetadataURL("");
+    setContentType("");
+    setContributors([]);
   };
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -52,6 +56,8 @@ export const RequestContextProvider = ({ children }) => {
   const [versionLocation, setVersionLocation] = useState("");
   const [metadataURL, setMetadataURL] = useState("");
   const [resHeaders, setResHeaders] = useState({ headers: new Headers(), url: "" });
+  const [contentType, setContentType] = useState("");
+  const [contributors, setContributors] = useState([]);
 
   const fetchResource = async () => {
 
@@ -60,11 +66,14 @@ export const RequestContextProvider = ({ children }) => {
       const handle = await getVersionedDatasetHandle(versionedRequest.url, { fetch: session.fetch });
       setHasVersion(handle.meta.hasVersion);
       setVersionLocation(handle.meta.versionedIn);
+      setContributors(handle.meta.contributors);
       setMetadataURL(handle.metaURL);
       const queryVersion = versionedRequest.version !== -1 ? versionedRequest.version : handle.meta.hasVersion;
       setDisplayVersion(queryVersion);
 
       const resource = await getVersionedDataset(handle, queryVersion, { fetch: session.fetch });
+      setContentType(getContentType(resource.handle.baseResourceInfo));
+      // TODO: Get blob without second nigh identical request
       const fileBlob = await getFile(resource.handle.baseURL, { fetch: fetchWrapper });
       //   const fileBlob = await getFile(resourceVersionLocation, { fetch: session.fetch });
       setBlobToBody(fileBlob);
@@ -109,7 +118,9 @@ export const RequestContextProvider = ({ children }) => {
       metadataURL: metadataURL,
       hasVersion: hasVersion,
       versionLocation: versionLocation,
-      displayVersion: displayVersion
+      displayVersion: displayVersion,
+      contentType: contentType,
+      contributors: contributors
     }}
     >
       {children}

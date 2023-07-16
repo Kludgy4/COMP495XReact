@@ -1,11 +1,19 @@
 import React, { useContext, useEffect, useState } from "react";
+import { buildThing, getSolidDataset, getThing, overwriteFile, saveSolidDatasetAt, setThing } from "@inrupt/solid-client";
+import { useSession } from "@inrupt/solid-ui-react";
+import { DCTERMS } from "@inrupt/vocab-common-rdf";
 import { Button, MenuItem, Paper, Select, Switch, TextField, Typography } from "@mui/material";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { RequestContext } from "../context/RequestContext";
+import { pathToName } from "../js/helper";
+import { getVersionedDatasetHandle } from "../js/versioningLayer";
 
 export default function ResourceDisplay({ width }) {
-  const { requestURL, displayVersion, resourceBody, hasVersion, sendRequest } = useContext(RequestContext);
+
+  const { session } = useSession();
+
+  const { requestURL, displayVersion, resourceBody, hasVersion, sendRequest, contentType } = useContext(RequestContext);
 
   const [highlightLanguage, setHighlightLanguage] = useState("turtle");
 
@@ -36,11 +44,25 @@ export default function ResourceDisplay({ width }) {
     setEditorText(e.target.value);
   };
 
-  const saveUpdatedFile = () => {
+  const saveUpdatedFile = async () => {
     console.log(`Saving\n${editorText}\nat\n${requestURL}`);
     // TODO: update metadata to include the current user
     // Update the file
+    await overwriteFile(
+      requestURL,
+      new File([editorText], pathToName(requestURL), { type: contentType }),
+      { contentType: contentType, fetch: session.fetch }
+    );
 
+    // Add current user as a contributor to the metadata
+    // TODO: Copy and clear when versioned
+    const saveHandle = await getVersionedDatasetHandle(requestURL, { fetch: session.fetch });
+    let metaset = await getSolidDataset(saveHandle.metaURL, { fetch: session.fetch });
+    const metathing = buildThing(getThing(metaset, requestURL))
+      .addUrl(DCTERMS.contributor, session.info.webId)
+      .build();
+    metaset = setThing(metaset, metathing);
+    await saveSolidDatasetAt(saveHandle.metaURL, metaset, { fetch: session.fetch });
 
     setEditing(false);
     sendRequest(requestURL);

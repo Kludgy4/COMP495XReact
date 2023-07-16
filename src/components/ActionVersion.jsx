@@ -9,7 +9,7 @@ import { hasVersionPredicate } from "../js/urls";
 export default function ActionVersion() {
 
   const { session } = useSession();
-  const { requestURL, sendRequest, hasVersion, metadataURL, versionLocation } = useContext(RequestContext);
+  const { requestURL, sendRequest, hasVersion, metadataURL, versionLocation, contributors } = useContext(RequestContext);
 
   const [loadVersion, setLoadVersion] = useState(1);
   const [loadVersionError, setLoadVersionError] = useState(false);
@@ -121,7 +121,12 @@ export default function ActionVersion() {
         </DialogActions>
       </Dialog>
       <Typography variant="body1">Contributors: </Typography>
-      <Typography variant="body2">No edits made yet... </Typography>
+      {contributors.length > 0 ?
+        contributors.map((c, i) =>
+          <Typography key={c} variant="body2">{i + 1}. {c}</Typography>
+        ) : (
+          <Typography variant="body2">No edits made yet... </Typography>
+        )}
     </ >
   );
 }

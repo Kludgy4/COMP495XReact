@@ -1,11 +1,10 @@
-import { WithServerResourceInfo, buildThing, createContainerAt, getInteger, getLinkedResourceUrlAll, getResourceInfo, getSolidDataset, getStringNoLocale, getThing, getUrl, saveSolidDatasetAt, setThing } from "@inrupt/solid-client";
+import { WithServerResourceInfo, buildThing, createContainerAt, getInteger, getLinkedResourceUrlAll, getResourceInfo, getSolidDataset, getStringNoLocale, getThing, getUrl, getUrlAll, saveSolidDatasetAt, setThing } from "@inrupt/solid-client";
 import { DCTERMS, POSIX, RDF } from "@inrupt/vocab-common-rdf";
 import { pathToContainer, pathToName } from "./helper";
 import { contentTypePredicate, hasVersionPredicate, versionedInPredicate } from "./urls";
 
-////////////////////////////////////////////////////////////////////////////////
-/////                      Efficient Versioning Layer                      /////
-////////////////////////////////////////////////////////////////////////////////
+// Layer is sometimes inefficiently used given its virtual nature. This means it often
+// doubles up on operations when used in practise, but its convenient to use 
 
 /**
  * 
@@ -54,11 +53,12 @@ export const getVersionedDatasetHandle = async (url: string, options): Promise<V
     meta: {
       hasVersion: getInteger(metathing, hasVersionPredicate),
       versionedIn: getUrl(metathing, versionedInPredicate),
+      contributors: getUrlAll(metathing, DCTERMS.contributor),
       type: getUrl(metathing, RDF.type),
       modified: getInteger(metathing, DCTERMS.modified),
       contentType: getStringNoLocale(metathing, contentTypePredicate),
       mtime: getInteger(metathing, POSIX.mtime),
-      size: getInteger(metathing, POSIX.size)
+      size: getInteger(metathing, POSIX.size),
     },
   };
 };
@@ -192,6 +192,7 @@ interface VersionedDatasetHandle {
 interface VersionedDatasetMeta {
   hasVersion: number | null;
   versionedIn: string | null;
+  contributors: string[];
   type: string | null;
   modified: number | null;
   contentType: string | null;
