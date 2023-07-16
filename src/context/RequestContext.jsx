@@ -1,15 +1,11 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useEffect, useState } from "react";
 import {
   getContentType,
   getFile,
-  getInteger,
-  getThing,
-  getUrl,
 } from "@inrupt/solid-client";
-import { hasVersionPredicate, versionedInPredicate } from "../js/urls";
 import LinkHeader from "http-link-header";
-import { PodContext } from "../context/PodContext";
-import { getVersionedDescriptionResourceSet } from "../js/versioningLayer";
+import { displayError } from "../js/helper";
+import { getVersionedDatasetHandle } from "../js/versioningLayer";
 import { useSession } from "@inrupt/solid-ui-react";
 
 export const RequestContext = createContext({
@@ -35,7 +31,6 @@ export const RequestContextProvider = ({ children }) => {
     setVersionLocation("");
     setDisplayVersion(-1);
 
-    setMetadataThing(null);
     setResourceBlob(new Blob());
     setVersionMeta({ versionedIn: "", hasVersion: -1 });
   };
@@ -60,6 +55,22 @@ export const RequestContextProvider = ({ children }) => {
   const fetchResource = async () => {
 
     // Retrieve base resource  
+    try {
+      const handle = await getVersionedDatasetHandle(versionedRequest.url, { fetch: session.fetch });
+
+      setCurrentVersion(handle.meta.hasVersion);
+      setVersionLocation(handle.meta.versionedIn);
+      setVersionMeta({ versionedIn: handle.meta.versionedIn, hasVersion: handle.meta.hasVersion });
+
+      setMetadataRequest({ url: handle.metaURL });
+    } catch (e) {
+      displayError(e.message);
+      setCurrentVersion(0);
+      setVersionLocation("");
+      return;
+    }
+
+    // const fileBlob = await getFile(versionedRequest.url, { fetch: fetchWrapper });
     const fileBlob = await getFile(versionedRequest.url, { fetch: fetchWrapper });
     if (versionedRequest.version === -1) {
 
@@ -69,7 +80,7 @@ export const RequestContextProvider = ({ children }) => {
 
   const [versionMeta, setVersionMeta] = useState({ versionedIn: "", hasVersion: -1 });
 
-  React.useEffect(() => { retrieveVersionedBody(); }, [versionMeta]);
+  useEffect(() => { retrieveVersionedBody(); }, [versionMeta]);
   const retrieveVersionedBody = async () => {
 
     // No resource yet (probably on app load)
@@ -111,44 +122,19 @@ export const RequestContextProvider = ({ children }) => {
 
   const [metadataRequest, setMetadataRequest] = useState({ url: "" });
 
-  const [metadataThing, setMetadataThing] = useState(null);
   const [currentVersion, setCurrentVersion] = useState(0);
   const [versionLocation, setVersionLocation] = useState("");
-  const { podURL } = useContext(PodContext);
 
   const fetchWrapper = async (resource, options) => {
+
+
     const fetchedResource = await session.fetch(resource, options);
 
     const { headers, ok, redirected, status, statusText, type, url } = fetchedResource;
     const fetchResponse = { headers, ok, redirected, status, statusText, time: Date.now(), type, url };
     setResHeaders(fetchResponse);
 
-    // Set the retrieved location of the metadata
-    const descResURI = headersToDescResURI(headers);
-    setMetadataRequest({ url: descResURI });
-    // Retrieve it
-    const metaset = await getVersionedDescriptionResourceSet(versionedRequest.url, descResURI, { fetch: session.fetch });
-    // const metaset = await getVersionedResourceDescriptionSet(podURL, versionedRequest.url, descResURI, session.fetch);
-    console.log(metaset);
-    if (metaset === null) {
-      setMetadataThing(null);
-      setCurrentVersion(0);
-      setVersionLocation("");
-      return fetchedResource;
-    }
 
-    const metathing = getThing(metaset, resource);
-    if (metathing === null) throw Error("Shouldn't happen after earlier validation");
-
-    // An inrupt "Thing" (https://docs.inrupt.com/developer-tools/javascript/client-libraries/reference/glossary/#term-Thing)
-    setMetadataThing(metathing);
-    let hasVersion = getInteger(metathing, hasVersionPredicate);
-    hasVersion = (hasVersion === null ? 0 : hasVersion);
-    setCurrentVersion(hasVersion);
-    let versionedIn = getUrl(metathing, versionedInPredicate);
-    versionedIn = (versionedIn === null ? "" : versionedIn);
-    setVersionLocation(versionedIn);
-    setVersionMeta({ versionedIn, hasVersion });
 
     // Continue returning (as is a wrapper)
     return fetchedResource;

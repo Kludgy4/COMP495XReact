@@ -1,5 +1,5 @@
 import { DCTERMS, POSIX, RDF } from "@inrupt/vocab-common-rdf";
-import { buildThing, createContainerAt, createContainerInContainer, getInteger, getLinkedResourceUrlAll, getResourceInfo, getSolidDataset, getStringNoLocale, getThing, getUrl, isContainer, saveSolidDatasetAt, setThing } from "@inrupt/solid-client";
+import { WithServerResourceInfo, buildThing, createContainerAt, createContainerInContainer, getInteger, getLinkedResourceUrlAll, getResourceInfo, getSolidDataset, getStringNoLocale, getThing, getUrl, isContainer, saveSolidDatasetAt, setThing } from "@inrupt/solid-client";
 import { contentTypePredicate, hasVersionPredicate, versionedInPredicate } from "./urls";
 import { displayError, pathToContainer, pathToName } from "./helper";
 
@@ -13,7 +13,7 @@ import { displayError, pathToContainer, pathToName } from "./helper";
  * @param options 
  * @returns 
  */
-export const getVersionedDatasetHandle = async (url: string, options) => {
+export const getVersionedDatasetHandle = async (url: string, options): Promise<VersionedDatasetHandle> => {
   // Get the metadata
   let baseDataset;
   try {
@@ -46,6 +46,7 @@ export const getVersionedDatasetHandle = async (url: string, options) => {
   return {
     baseURL: url,
     baseResourceInfo: baseDataset,
+    metaURL: metadataURL,
     meta: {
       hasVersion: getInteger(metathing, hasVersionPredicate),
       versionedIn: getUrl(metathing, versionedInPredicate),
@@ -178,8 +179,11 @@ export const getVersionedDescriptionResourceSet = async (baseResourceURL, metada
 
 interface VersionedDatasetHandle {
   baseURL: string;
-  meta: VersionedDatasetMeta
+  baseResourceInfo: WithServerResourceInfo;
+  metaURL: string;
+  meta: VersionedDatasetMeta;
 }
+
 
 interface VersionedDatasetMeta {
   hasVersion: number | null;
