@@ -1,11 +1,18 @@
 import { DCTERMS, POSIX, RDF } from "@inrupt/vocab-common-rdf";
+import { buildThing, createContainerAt, createContainerInContainer, getInteger, getLinkedResourceUrlAll, getResourceInfo, getSolidDataset, getStringNoLocale, getThing, getUrl, isContainer, saveSolidDatasetAt, setThing } from "@inrupt/solid-client";
 import { contentTypePredicate, hasVersionPredicate, versionedInPredicate } from "./urls";
-import { getInteger, getLinkedResourceUrlAll, getResourceInfo, getSolidDataset, getStringNoLocale, getThing, getUrl } from "@inrupt/solid-client";
+import { displayError, pathToContainer, pathToName } from "./helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 /////                      Efficient Versioning Layer                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * 
+ * @param url 
+ * @param options 
+ * @returns 
+ */
 export const getVersionedDatasetHandle = async (url: string, options) => {
   // Get the metadata
   let baseDataset;
@@ -24,7 +31,8 @@ export const getVersionedDatasetHandle = async (url: string, options) => {
 
   let metaset;
   try {
-    metaset = await getSolidDataset(metadataURL, options);
+    metaset = await getVersionedDescriptionResourceSet(url, metadataURL, options);
+    // metaset = await getSolidDataset(metadataURL, options);
   } catch (e) {
     throw new Error(`Metadata at '${metadataURL}' is not available: ${e.message}`);
   }
@@ -50,6 +58,13 @@ export const getVersionedDatasetHandle = async (url: string, options) => {
   };
 };
 
+/**
+ * 
+ * @param versionedDatasetHandle 
+ * @param version 
+ * @param options 
+ * @returns 
+ */
 export const getVersionedDataset = async (versionedDatasetHandle: VersionedDatasetHandle, version: number, options) => {
 
   const handle = versionedDatasetHandle;
@@ -85,6 +100,78 @@ export const getVersionedDataset = async (versionedDatasetHandle: VersionedDatas
     dataset: await getSolidDataset(versionedURL, options),
     handle: await getVersionedDatasetHandle(versionedURL, options)
   };
+};
+
+/**
+ * Checks that the Resource Description "dataset" is valid, and contains what
+ * is required for versioning. Adds versioning predicates if missing and sets
+ * up folders required for versioning
+ * @param {*} baseResourceURL The URL of the unversioned resource
+ * @param {*} metadataURL The URL pointing to the "description resource" of the base resource
+ * @param {*} authFetch A function that can make authenticated fetch requests to the above resources
+ * @returns A versioned resource description set that can be used to extract metadata info about a file
+ */
+// export const getVersionedResourceDescriptionSet = async (podURL, baseResourceURL, metadataURL, authFetch) => {
+export const getVersionedDescriptionResourceSet = async (baseResourceURL, metadataURL, options) => {
+
+  // 1. Get the description resource dataset
+  let metaset = await getSolidDataset(metadataURL, options);
+  let metathing = getThing(metaset, baseResourceURL);
+
+  // 2. Check if the Description Resource is of the expected configuration
+  if (metathing === null) {
+    // No metadata at all? ERROR!
+    throw Error("No Description Resource found??? AHHHH");
+  }
+
+  // Does this resource have a version number attached to it?
+  const currentVersion = getInteger(metathing, hasVersionPredicate);
+  if (currentVersion === null) {
+    // Resource is currently unversioned, add metadata to support versioning starting from v1
+    metathing = buildThing(metathing).addInteger(hasVersionPredicate, 1).build();
+    metaset = setThing(metaset, metathing);
+  }
+
+  // Does this resource have a version location attached to it?
+  const resourceVersionLocation = getUrl(metathing, versionedInPredicate);
+  if (resourceVersionLocation === null) {
+    // No location is currently provisioned for this resource, so provision one and add location as metadata
+    const baseContainerURL = pathToContainer(baseResourceURL);
+
+    // a. Does a .versions container exist at Pod URL base?
+    const versioningContainerURL = baseContainerURL + ".versions/";
+    // TODO: Can I just call createContainerInContainer and have it fail if the container already exists ie. use only 1 query?
+    try {
+      await getSolidDataset(versioningContainerURL, options);
+    } catch (e) {
+      // Create it.
+      await createContainerAt(versioningContainerURL, options);
+    }
+
+    // b. Does a versioning folder exist in it for this resource?
+    const resourceVersionContainerURL = versioningContainerURL + pathToName(baseResourceURL) + "/";
+    try {
+      // Create a versioning container as required
+      // TODO: Does saveSolidDatasetAt create the containers required on the path?
+      const re = await createContainerAt(resourceVersionContainerURL, options);
+      console.log(re);
+    } catch (e) {
+      // container already exists!!!
+      // console.log(e);
+    }
+
+    // c. Link description resource to versioning folder
+    metathing = buildThing(metathing).addUrl(versionedInPredicate, resourceVersionContainerURL).build();
+    metaset = setThing(metaset, metathing);
+  }
+
+  // 3. Save the new description resource
+  if (resourceVersionLocation === null || currentVersion === null) {
+    metaset = await saveSolidDatasetAt(metadataURL, metaset, options);
+  }
+
+  // Return the valid (perhaps newly initialised) metaset
+  return metaset;
 };
 
 ////////////////////////////////////////////////////////////

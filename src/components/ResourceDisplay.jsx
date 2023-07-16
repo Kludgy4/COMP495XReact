@@ -46,8 +46,8 @@ export default function ResourceDisplay({ width }) {
   const saveUpdatedFile = () => {
     console.log(`Saving\n${editorText}\nat\n${requestURL}`);
     // TODO: update metadata to include the current user
-
     // Update the file
+
 
     setEditing(false);
     sendRequest(requestURL);
