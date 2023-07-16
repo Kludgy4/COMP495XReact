@@ -1,11 +1,10 @@
-import { DCTERMS, POSIX, RDF, SCHEMA_INRUPT } from "@inrupt/vocab-common-rdf";
 import {
-  buildThing, createAclFromFallbackAcl, createContainerAt, createContainerInContainer, getInteger, getLinkedResourceUrlAll, getResourceAcl, getResourceInfo, getSolidDataset, getStringNoLocale, getThing, getUrl, hasAccessibleAcl, hasFallbackAcl, hasResourceAcl, saveSolidDatasetAt, setThing
+  createAclFromFallbackAcl, getResourceAcl, getStringNoLocale, getThing, hasAccessibleAcl, hasFallbackAcl, hasResourceAcl
 } from "@inrupt/solid-client";
-import { contentTypePredicate, hasVersionPredicate, versionedInPredicate } from "./urls";
-import { getVersionedDataset, getVersionedDatasetHandle } from "./versioningLayer";
+import { SCHEMA_INRUPT } from "@inrupt/vocab-common-rdf";
 import dayjs from "dayjs";
 import { enqueueSnackbar } from "notistack";
+import { getVersionedDataset, getVersionedDatasetHandle } from "./versioningLayer";
 
 export const displayError = (message) => enqueueSnackbar(message, { variant: "error" });
 

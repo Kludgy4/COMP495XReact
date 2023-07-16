@@ -1,15 +1,15 @@
-import { Navigate, Route, Routes } from "react-router-dom";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
+import React from "react";
+import { SessionProvider } from "@inrupt/solid-ui-react";
 import CssBaseline from "@mui/material/CssBaseline";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { SnackbarProvider } from "notistack";
+import { Navigate, Route, Routes } from "react-router-dom";
 import Header from "./components/Header";
 import Login from "./components/Login";
-import { PodContextProvider } from "./context/PodContext";
-import React from "react";
-import { RequestContextProvider } from "./context/RequestContext";
 import ScreenAdmin from "./components/ScreenAdmin";
 import ScreenUser from "./components/ScreenUser";
-import { SessionProvider } from "@inrupt/solid-ui-react";
-import { SnackbarProvider } from "notistack";
+import { PodContextProvider } from "./context/PodContext";
+import { RequestContextProvider } from "./context/RequestContext";
 import useAuth from "./js/useAuth";
 
 const darkTheme = createTheme({

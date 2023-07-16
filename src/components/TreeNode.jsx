@@ -1,19 +1,19 @@
-import { Article, Delete, Edit, NoteAdd, PrecisionManufacturing, Refresh } from "@mui/icons-material";
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, ListItemIcon, Menu, MenuItem, TextField } from "@mui/material";
 import React, { useContext, useState } from "react";
-import { createSolidDataset, deleteFile, deleteSolidDataset, getContainedResourceUrlAll, getResourceInfo, getSolidDataset, isContainer, saveFileInContainer, saveSolidDatasetAt, setThing } from "@inrupt/solid-client";
-import { displayError, pathToName } from "../js/helper";
-import { RequestContext } from "../context/RequestContext";
-import TreeItem from "@mui/lab/TreeItem";
-import genAddrThing from "../js/addressGenerator";
-import { getVersionedDatasetHandle } from "../js/versioningLayer";
+import { createSolidDataset, deleteFile, getContainedResourceUrlAll, getSolidDataset, isContainer, saveFileInContainer, saveSolidDatasetAt, setThing } from "@inrupt/solid-client";
 import { useSession } from "@inrupt/solid-ui-react";
+import { Article, Delete, Edit, NoteAdd, PrecisionManufacturing, Refresh } from "@mui/icons-material";
+import TreeItem from "@mui/lab/TreeItem";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, ListItemIcon, Menu, MenuItem, TextField } from "@mui/material";
+import { RequestContext } from "../context/RequestContext";
+import genAddrThing from "../js/addressGenerator";
+import { displayError, pathToName } from "../js/helper";
+import { getVersionedDatasetHandle } from "../js/versioningLayer";
 
 export default function TreeNode({ resourceURL, parentRefresh }) {
 
   const { session } = useSession();
   const [resources, setResources] = useState([]);
-  const { sendRequest } = useContext(RequestContext);
+  const { requestURL, sendRequest } = useContext(RequestContext);
 
   const [newResDialogOpen, setNewResDialogOpen] = useState(false);
   const [renameResDialogOpen, setRenameResDialogOpen] = useState(false);
@@ -44,8 +44,9 @@ export default function TreeNode({ resourceURL, parentRefresh }) {
 
   const refreshAddress = async () => {
     const addrDataset = await getSolidDataset(resourceURL, { fetch: session.fetch });
-    genAddrDatasetAt(addrDataset, resourceURL);
     closeContextMenu();
+    await genAddrDatasetAt(addrDataset, resourceURL);
+    sendRequest(requestURL);
   };
 
   const genAddrDatasetAt = async (addrDataset, url) => {

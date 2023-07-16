@@ -1,7 +1,7 @@
+import { WithServerResourceInfo, buildThing, createContainerAt, getInteger, getLinkedResourceUrlAll, getResourceInfo, getSolidDataset, getStringNoLocale, getThing, getUrl, saveSolidDatasetAt, setThing } from "@inrupt/solid-client";
 import { DCTERMS, POSIX, RDF } from "@inrupt/vocab-common-rdf";
-import { WithServerResourceInfo, buildThing, createContainerAt, createContainerInContainer, getInteger, getLinkedResourceUrlAll, getResourceInfo, getSolidDataset, getStringNoLocale, getThing, getUrl, isContainer, saveSolidDatasetAt, setThing } from "@inrupt/solid-client";
+import { pathToContainer, pathToName } from "./helper";
 import { contentTypePredicate, hasVersionPredicate, versionedInPredicate } from "./urls";
-import { displayError, pathToContainer, pathToName } from "./helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 /////                      Efficient Versioning Layer                      /////
@@ -84,7 +84,7 @@ export const getVersionedDataset = async (versionedDatasetHandle: VersionedDatas
 
   // The version requested is outside of the available bounds
   if (version < 1 || version > meta.hasVersion) {
-    throw new Error("Requested resource version does not exist");
+    throw new Error(`Requested resource version does not exist. Max ${meta.hasVersion}`);
   }
 
   // Base case

@@ -1,11 +1,11 @@
-import { RDF, SCHEMA_INRUPT } from "@inrupt/vocab-common-rdf";
 import { buildThing, createThing } from "@inrupt/solid-client";
+import { RDF, SCHEMA_INRUPT } from "@inrupt/vocab-common-rdf";
 
 export default function genAddrThing(addrResourceURL) {
-  return buildThing(createThing({url: addrResourceURL}))
+  return buildThing(createThing({ url: addrResourceURL }))
     .setIri(RDF.type, SCHEMA_INRUPT.PostalAddress)
     .setStringNoLocale(SCHEMA_INRUPT.streetAddress, `${generateRandomNumber(1, 99)} ${getRandEl(names)} ${getRandEl(roadTypes)[1]}`)
-    .setStringNoLocale(SCHEMA_INRUPT.postalCode, generateRandomNumber(1,9999).toString().padStart(4, "0"))
+    .setStringNoLocale(SCHEMA_INRUPT.postalCode, generateRandomNumber(1, 9999).toString().padStart(4, "0"))
     .setStringNoLocale(SCHEMA_INRUPT.addressLocality, getRandEl(names) + "ville")
     .setStringNoLocale(SCHEMA_INRUPT.addressRegion, getRandEl(names) + "state")
     .setStringNoLocale(SCHEMA_INRUPT.addressCountry, getRandEl(names) + "land")

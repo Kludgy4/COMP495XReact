@@ -1,23 +1,22 @@
-import { Commit, FileDownload, Refresh } from "@mui/icons-material";
-import { Dialog, DialogActions, DialogTitle, TextField, Typography } from "@mui/material";
 import React, { useContext, useState } from "react";
 import { buildThing, getFile, getSolidDataset, getThing, saveFileInContainer, saveSolidDatasetAt, setThing } from "@inrupt/solid-client";
-import Button from "@mui/material/Button";
+import { useSession } from "@inrupt/solid-ui-react";
+import { Commit, FileDownload, Refresh } from "@mui/icons-material";
+import { Button, Dialog, DialogActions, DialogTitle, TextField, Typography } from "@mui/material";
 import { RequestContext } from "../context/RequestContext";
 import { hasVersionPredicate } from "../js/urls";
-import { useSession } from "@inrupt/solid-ui-react";
 
 export default function ActionVersion() {
 
   const { session } = useSession();
-  const { sendRequest, responseHeaders, currentVersion, metadataURL, versionLocation } = useContext(RequestContext);
+  const { requestURL, sendRequest, hasVersion, metadataURL, versionLocation } = useContext(RequestContext);
 
   const [loadVersion, setLoadVersion] = useState(1);
   const [loadVersionError, setLoadVersionError] = useState(false);
 
   const changeLoadVersion = (event) => {
     const ver = event.target.value;
-    if (ver === "" || ver >= 1 && ver <= currentVersion) {
+    if (ver === "" || ver >= 1 && ver <= hasVersion) {
       setLoadVersionError(false);
       setLoadVersion(ver);
     } else {
@@ -40,22 +39,22 @@ export default function ActionVersion() {
       setLoadVersionError(true);
       return;
     }
-    sendRequest(responseHeaders.url, parseInt(loadVersion, 10));
+    sendRequest(requestURL, parseInt(loadVersion, 10));
   };
 
   const commitVersion = async () => {
     // Version file using linked versioning folder
-    const currFile = await getFile(responseHeaders.url, { fetch: session.fetch });
-    saveFileInContainer(versionLocation, currFile, { slug: currentVersion.toString(), fetch: session.fetch });
+    const currFile = await getFile(requestURL, { fetch: session.fetch });
+    saveFileInContainer(versionLocation, currFile, { slug: hasVersion.toString(), fetch: session.fetch });
 
     // Update metadata of file to reflect new version
-    console.log(metadataURL.url);
-    let metaset = await getSolidDataset(metadataURL.url, { fetch: session.fetch });
-    let metathing = getThing(metaset, responseHeaders.url);
-    metathing = buildThing(metathing).setInteger(hasVersionPredicate, currentVersion + 1).build();
+    console.log(metadataURL);
+    let metaset = await getSolidDataset(metadataURL, { fetch: session.fetch });
+    let metathing = getThing(metaset, requestURL);
+    metathing = buildThing(metathing).setInteger(hasVersionPredicate, hasVersion + 1).build();
     metaset = setThing(metaset, metathing);
-    await saveSolidDatasetAt(metadataURL.url, metaset, { fetch: session.fetch });
-    sendRequest(responseHeaders.url);
+    await saveSolidDatasetAt(metadataURL, metaset, { fetch: session.fetch });
+    sendRequest(requestURL);
   };
 
   // React.useEffect(() => {
@@ -64,7 +63,7 @@ export default function ActionVersion() {
 
   return (
     <>
-      <Typography variant="body1">Latest Version: {currentVersion}</Typography>
+      <Typography variant="body1">Latest Version: {hasVersion}</Typography>
       <Button
         variant="contained"
         startIcon={<Commit />}
@@ -81,7 +80,7 @@ export default function ActionVersion() {
         value={loadVersion}
         size="small"
         error={loadVersionError}
-        helperText={loadVersionError ? `Load Version must be between 1 and ${currentVersion}` : ""}
+        helperText={loadVersionError ? `Load Version must be between 1 and ${hasVersion}` : ""}
         fullWidth
       />
       <div style={{ display: "flex", gap: "8px" }}>
@@ -102,7 +101,7 @@ export default function ActionVersion() {
           size="small"
           style={{ flexGrow: 1, flexBasis: 0 }}
           startIcon={<Refresh />}
-          onClick={() => sendRequest(responseHeaders.url)}
+          onClick={() => sendRequest(requestURL)}
         >
           Refresh Preview
         </Button>

@@ -1,32 +1,29 @@
 import "dayjs/locale/en-gb";
-import { Button, Dialog, DialogActions, DialogTitle, TextField, Typography } from "@mui/material";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { History, Search } from "@mui/icons-material";
 import React, { useContext, useEffect, useState } from "react";
-import { addressObjToString, convertUnixToDatestring, displayError, getURLAddressAndVersions, tryGetResourceAcl } from "../js/helper";
-import { createSolidDataset, deleteSolidDataset, getFile, getSolidDataset, getSolidDatasetWithAcl, getStringNoLocale, getThing, getThingAll, getUrl, getUrlAll, saveAclFor, saveSolidDatasetAt, setAgentResourceAccess, setPublicResourceAccess } from "@inrupt/solid-client";
-import { hasVersionPredicate, shareAppWebID, sharedResourcePredicate, sharedResourcesURL } from "../js/urls";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import ContextLogoutButton from "./ContextLogoutButton";
+import { createSolidDataset, deleteSolidDataset, getSolidDataset, getSolidDatasetWithAcl, getThing, getThingAll, getUrlAll, saveAclFor, saveSolidDatasetAt, setAgentResourceAccess, setPublicResourceAccess } from "@inrupt/solid-client";
+import { useSession } from "@inrupt/solid-ui-react";
+import { History, Search } from "@mui/icons-material";
+import { Button, Dialog, DialogActions, DialogTitle, TextField, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import LinearProgressWithLabel from "./LinearProgressWithLabel";
-import { POSIX } from "@inrupt/vocab-common-rdf";
-import { PodContext } from "../context/PodContext";
-import { QueryEngine } from "@comunica/query-sparql-solid";
-import { RequestContext } from "../context/RequestContext";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
+import { PodContext } from "../context/PodContext";
+import { addressObjToString, convertUnixToDatestring, displayError, getURLAddressAndVersions, tryGetResourceAcl } from "../js/helper";
+import { shareAppWebID, sharedResourcePredicate, sharedResourcesURL } from "../js/urls";
 import useResponsiveWidth from "../js/useResponsiveWidth";
-import { useSession } from "@inrupt/solid-ui-react";
 import useWindowSize from "../js/useWindowSize";
+import ContextLogoutButton from "./ContextLogoutButton";
+import LinearProgressWithLabel from "./LinearProgressWithLabel";
 
 export default function ScreenAdmin() {
   const { podURL } = useContext(PodContext);
   const navigate = useNavigate();
   const { session } = useSession();
 
-  const [windowWidth, windowHeight] = useWindowSize();
-  const contentWidth = useResponsiveWidth(windowWidth);
+  const { width } = useWindowSize();
+  const contentWidth = useResponsiveWidth(width);
 
   useEffect(() => {
     if (podURL === null) {
@@ -73,7 +70,7 @@ const AddressHistory = () => {
           { field: "country", headerName: "Country", flex: 1, sortable: false }
         ]}
         disableColumnSelector={true}
-        initialState={{pagination: { paginationModel: { pageSize: 5 } }}}
+        initialState={{ pagination: { paginationModel: { pageSize: 5 } } }}
         pageSizeOptions={[5, 10, 25]}
       />
     </div>
@@ -177,7 +174,7 @@ const AddressAtDate = () => {
           { field: "dateRange", headerName: "Stay Duration", flex: 1, sortable: false },
         ]}
         disableColumnSelector={true}
-        initialState={{pagination: { paginationModel: { pageSize: 5 } }}}
+        initialState={{ pagination: { paginationModel: { pageSize: 5 } } }}
         pageSizeOptions={[5, 10]}
       />
     </div>
@@ -189,7 +186,6 @@ const AddressAtDateSearch = ({ setUserAddresses }) => {
   const { session } = useSession();
 
   const [searchDate, setSearchDate] = useState(dayjs());
-  const [searchDateError, setSearchDateError] = useState("");
   const [part, setPart] = useState(1);
   const [whole, setWhole] = useState(1);
 
@@ -201,7 +197,6 @@ const AddressAtDateSearch = ({ setUserAddresses }) => {
     try {
       sharedResourcesDataset = await getSolidDataset(sharedResourcesURL, { fetch: session.fetch });
     } catch (e) {
-      setSearchDateError("sharedResources.ttl inaccessible");
       displayError(e.message);
       return;
     }
@@ -251,13 +246,17 @@ const AddressAtDateSearch = ({ setUserAddresses }) => {
     setPart(sharedWebids.length);
   };
 
+  const handleDateChange = (newDate) => {
+    setSearchDate(newDate);
+  };
+
   return (
     <>
       <div style={{ display: "flex", flexDirection: "row", gap: "12px" }}>
         <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en-gb">
           <DatePicker
             value={searchDate}
-            onChange={newDate => setSearchDate(newDate)}
+            onChange={handleDateChange}
           />
         </LocalizationProvider>
         <Button
@@ -282,22 +281,6 @@ const TestingArea = () => {
 
   const { session } = useSession();
 
-  const [resourceURL, setResourceURL] = useState("");
-  const urlChange = (event) => {
-    setResourceURL(event.target.value);
-  };
-
-  const getResourceContents = async () => {
-    // console.log(resourceURL);
-    try {
-      const info = await getFile(resourceURL, { fetch: session.fetch });
-      console.log(info);
-      console.log(session.info);
-    } catch (e) {
-      displayError(e.message);
-    }
-  };
-
   const resetSharedResources = async () => {
     // Reset the dataset
     try {
@@ -307,7 +290,7 @@ const TestingArea = () => {
       displayError(e.message);
     }
     const blankDataset = createSolidDataset();
-    const createdDataset = await saveSolidDatasetAt(sharedResourcesURL, blankDataset, { fetch: session.fetch });
+    await saveSolidDatasetAt(sharedResourcesURL, blankDataset, { fetch: session.fetch });
 
     // Reset ACL to allow appending
     const datasetWithAcl = await getSolidDatasetWithAcl(sharedResourcesURL, { fetch: session.fetch });
@@ -324,43 +307,8 @@ const TestingArea = () => {
     if (s) resetSharedResources();
   };
 
-  const test = async () => {
-    console.log("Start!");
-
-    const engine = new QueryEngine();
-    // const bindingsStream = await engine.queryBindings(`
-    //     PREFIX client: <https://client-comp495x.duckdns.org/ns/>
-
-    //     SELECT ?streetAddress
-    //     WHERE {
-    //       ?indexEntry client:sharedBy ?profile .
-    //       ?s <https://client-comp495x.duckdns.org/ns/sharedBy> ?o
-    //     } LIMIT 100
-    //   `, {
-    //   sources: [sharedResourcesURL],
-    //   "@comunica/actor-http-inrupt-sold-client-authn:session": session,
-    // });
-
-    const query = `
-      SELECT *
-      WHERE {
-        ?s <${sharedResourcePredicate}> ?o
-      } LIMIT 100
-    `;
-
-    const bindingsStream = await engine.queryBindings(
-      query,
-      {
-        sources: [sharedResourcesURL],
-        "@comunica/actor-http-inrupt-solid-client-authn:session": session,
-      }
-    );
-
-    bindingsStream.on("data", (b) => {
-      console.log(b.toString());
-    });
-
-    console.log("Done!");
+  const test = () => {
+    console.log("Running TESTing function");
   };
 
   return (<>

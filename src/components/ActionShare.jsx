@@ -1,13 +1,10 @@
-import { Button, Typography } from "@mui/material";
-import React, { useContext, useState } from "react";
-import { buildThing, createAcl, createAclFromFallbackAcl, createThing, getAgentAccess, getAgentDefaultAccess, getFallbackAcl, getResourceAcl, getResourceInfo, getResourceInfoWithAcl, getSolidDataset, getSolidDatasetWithAcl, getThing, hasAccessibleAcl, hasAcl, hasFallbackAcl, hasResourceAcl, isContainer, saveAclFor, saveSolidDatasetAt, setAgentDefaultAccess, setAgentResourceAccess, setPublicResourceAccess, setThing } from "@inrupt/solid-client";
-import { shareAppWebID, sharedResourcePredicate, sharedResourcesURL } from "../js/urls";
-import { RequestContext } from "../context/RequestContext";
-import { Share } from "@mui/icons-material";
-
-import { tryGetResourceAcl } from "../js/helper";
-import { universalAccess } from "@inrupt/solid-client";
+import React, { useContext } from "react";
+import { buildThing, createAclFromFallbackAcl, createThing, getResourceAcl, getResourceInfoWithAcl, getSolidDataset, getThing, hasAccessibleAcl, hasFallbackAcl, hasResourceAcl, saveAclFor, saveSolidDatasetAt, setAgentDefaultAccess, setThing, universalAccess } from "@inrupt/solid-client";
 import { useSession } from "@inrupt/solid-ui-react";
+import { Share } from "@mui/icons-material";
+import { Button, Typography } from "@mui/material";
+import { RequestContext } from "../context/RequestContext";
+import { shareAppWebID, sharedResourcePredicate, sharedResourcesURL } from "../js/urls";
 
 // Checks there is a resource ACL available, creates one if not
 const tryInitAcl = async (resourceInfo, fetch) => {

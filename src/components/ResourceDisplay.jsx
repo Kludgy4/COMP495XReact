@@ -1,18 +1,11 @@
-import { Button, InputLabel, MenuItem, Paper, Select, Switch, TextField, Typography } from "@mui/material";
 import React, { useContext, useEffect, useState } from "react";
-import { ContentEditable } from "@lexical/react/LexicalContentEditable";
-import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import LexicalErrorBoundary from "@lexical/react/LexicalErrorBoundary";
-import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
-import { PlainTextPlugin } from "@lexical/react/LexicalPlainTextPlugin";
-import ReactMarkdown from "react-markdown";
-import { RequestContext } from "../context/RequestContext";
+import { Button, MenuItem, Paper, Select, Switch, TextField, Typography } from "@mui/material";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { displayError } from "../js/helper";
 import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { RequestContext } from "../context/RequestContext";
 
 export default function ResourceDisplay({ width }) {
-  const { requestURL, displayVersion, resourceBody, currentVersion, sendRequest } = useContext(RequestContext);
+  const { requestURL, displayVersion, resourceBody, hasVersion, sendRequest } = useContext(RequestContext);
 
   const [highlightLanguage, setHighlightLanguage] = useState("turtle");
 
@@ -22,8 +15,8 @@ export default function ResourceDisplay({ width }) {
 
   useEffect(() => {
     // Can only edit the latest version
-    setCanEdit(displayVersion === currentVersion);
-  }, [displayVersion, currentVersion]);
+    setCanEdit(displayVersion === hasVersion);
+  }, [displayVersion, hasVersion]);
 
   useEffect(() => {
     if (canEdit || editing) {
@@ -85,7 +78,6 @@ export default function ResourceDisplay({ width }) {
       </div>
       {
         editing ? (
-          // <Editor onChange={handleEditorTextChange} initText={editorText}/>
           <TextField
             multiline
             value={editorText}
@@ -113,67 +105,6 @@ export default function ResourceDisplay({ width }) {
         )
 
       }
-
-      {/* {
-        resourceBody === "" ? (
-        ): (
-          editing? (
-              // <Editor onChange={handleEditorTextChange} initText={editorText}/>
-              <TextField
-      multiline
-      value = { editorText }
-      fullWidth
-      style = {{
-                overflow: "scroll",
-                height: "100%"
-              }}
-      onChange={handleEditorTextChange}
-    >
-      editor
-    </TextField>
-  ) : (
-    <SyntaxHighlighter
-      id="syntax"
-      language={highlightLanguage}
-      showLineNumbers={true}
-      style={materialDark}
-    >
-      {resourceBody}
-    </SyntaxHighlighter>
-  )) 
-}*/}
     </Paper >
   );
 }
-
-const Editor = ({ onChange, initText }) => {
-
-  const theme = {};
-
-  const onError = (error) => displayError(error);
-
-  const initialConfig = {
-    namespace: "MyEditor",
-    theme,
-    onError,
-    editorState: initText
-  };
-
-  return (
-    <LexicalComposer initialConfig={initialConfig}>
-      <PlainTextPlugin
-        contentEditable={
-          <ContentEditable
-            style={{
-              height: "100%",
-              width: "100%",
-              padding: "12px",
-              border: "1px solid white"
-            }}
-          />}
-        ErrorBoundary={LexicalErrorBoundary}
-      />
-      <OnChangePlugin onChange={onChange} />
-    </LexicalComposer>
-  );
-};

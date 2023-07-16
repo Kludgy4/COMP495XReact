@@ -1,8 +1,8 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
 import LinearProgress from "@mui/material/LinearProgress";
-import PropTypes from "prop-types";
 import Typography from "@mui/material/Typography";
+import PropTypes from "prop-types";
 
 export default function LinearProgressWithLabel(props) {
   const value = (props.part / props.whole) * 100;

@@ -1,8 +1,8 @@
+import React, { useContext } from "react";
 import { Box, Tab, Tabs, styled } from "@mui/material";
-import React, { useContext, useEffect } from "react";
+import { RequestContext } from "../context/RequestContext";
 import ActionShare from "./ActionShare";
 import ActionVersion from "./ActionVersion";
-import { RequestContext } from "../context/RequestContext";
 
 function a11yProps(index) {
   return {
@@ -30,14 +30,14 @@ const StyledTab = styled((props) => <Tab disableRipple {...props} />)(
 
 export default function ResourceActions({ width }) {
 
-  const { currentVersion } = useContext(RequestContext);
+  const { hasVersion } = useContext(RequestContext);
 
   const [actionTab, setActionTab] = React.useState(0);
   const handleChange = (event, newValue) => setActionTab(newValue);
 
   return (
     <div className="resourceVersions" style={{ width: width }}>
-      {currentVersion === 0 ? (
+      {hasVersion === 0 ? (
         <div>No resource selected</div>
       ) : (<>
         <Box sx={{ borderBottom: 1, borderColor: "divider", width: "100%" }}>

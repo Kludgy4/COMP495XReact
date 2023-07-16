@@ -3,19 +3,19 @@ import {
   getContentType,
   getFile,
 } from "@inrupt/solid-client";
-import LinkHeader from "http-link-header";
-import { displayError } from "../js/helper";
-import { getVersionedDatasetHandle } from "../js/versioningLayer";
 import { useSession } from "@inrupt/solid-ui-react";
+import { displayError } from "../js/helper";
+import { getVersionedDataset, getVersionedDatasetHandle } from "../js/versioningLayer";
 
 export const RequestContext = createContext({
   requestURL: "",
   requestVersion: -1,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   sendRequest: (resourceURL, version = -1) => { return null; },
   responseHeaders: new Headers(),
   resourceBody: "",
-  metadataURL: { url: "" },
-  currentVersion: 0,
+  metadataURL: "",
+  hasVersion: 0,
   versionLocation: "",
   displayVersion: -1
 });
@@ -26,13 +26,10 @@ export const RequestContextProvider = ({ children }) => {
   const resetState = () => {
     setResHeaders({ headers: new Headers(), url: "" });
     setBody("");
-    setMetadataRequest({ url: "" });
-    setCurrentVersion(0);
+    setHasVersion(0);
     setVersionLocation("");
     setDisplayVersion(-1);
-
-    setResourceBlob(new Blob());
-    setVersionMeta({ versionedIn: "", hasVersion: -1 });
+    setMetadataURL("");
   };
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -48,85 +45,50 @@ export const RequestContextProvider = ({ children }) => {
     if (versionedRequest.url !== "") fetchResource(); else resetState();
   }, [versionedRequest]);
 
-  const [resourceBlob, setResourceBlob] = useState(new Blob());
+  const { session } = useSession();
   const [body, setBody] = useState("");
   const [displayVersion, setDisplayVersion] = useState(-1);
+  const [hasVersion, setHasVersion] = useState(0);
+  const [versionLocation, setVersionLocation] = useState("");
+  const [metadataURL, setMetadataURL] = useState("");
+  const [resHeaders, setResHeaders] = useState({ headers: new Headers(), url: "" });
 
   const fetchResource = async () => {
 
     // Retrieve base resource  
     try {
       const handle = await getVersionedDatasetHandle(versionedRequest.url, { fetch: session.fetch });
-
-      setCurrentVersion(handle.meta.hasVersion);
+      setHasVersion(handle.meta.hasVersion);
       setVersionLocation(handle.meta.versionedIn);
-      setVersionMeta({ versionedIn: handle.meta.versionedIn, hasVersion: handle.meta.hasVersion });
+      setMetadataURL(handle.metaURL);
+      const queryVersion = versionedRequest.version !== -1 ? versionedRequest.version : handle.meta.hasVersion;
+      setDisplayVersion(queryVersion);
 
-      setMetadataRequest({ url: handle.metaURL });
+      const resource = await getVersionedDataset(handle, queryVersion, { fetch: session.fetch });
+      const fileBlob = await getFile(resource.handle.baseURL, { fetch: fetchWrapper });
+      //   const fileBlob = await getFile(resourceVersionLocation, { fetch: session.fetch });
+      setBlobToBody(fileBlob);
+
     } catch (e) {
       displayError(e.message);
-      setCurrentVersion(0);
+      setHasVersion(0);
       setVersionLocation("");
       return;
-    }
-
-    // const fileBlob = await getFile(versionedRequest.url, { fetch: fetchWrapper });
-    const fileBlob = await getFile(versionedRequest.url, { fetch: fetchWrapper });
-    if (versionedRequest.version === -1) {
-
-      setBlobToBody(fileBlob);
-    }
-  };
-
-  const [versionMeta, setVersionMeta] = useState({ versionedIn: "", hasVersion: -1 });
-
-  useEffect(() => { retrieveVersionedBody(); }, [versionMeta]);
-  const retrieveVersionedBody = async () => {
-
-    // No resource yet (probably on app load)
-    if (versionMeta.versionedIn === "") return;
-
-    // We have queried the latest version, so this function call is invalid
-    if (versionedRequest.version === -1) {
-      setDisplayVersion(versionMeta.hasVersion);
-      return;
-    }
-
-    // Retrieve the requested resource version
-    if (versionMeta.hasVersion === versionedRequest.version) {
-      // base resource instead
-      sendRequest(versionedRequest.url);
-    } else {
-      // Get and display the versioned resource in place of the actual resource
-      const resourceVersionLocation = versionMeta.versionedIn + versionedRequest.version;
-      const fileBlob = await getFile(resourceVersionLocation, { fetch: session.fetch });
-      setBlobToBody(fileBlob);
-      setDisplayVersion(versionedRequest.version);
     }
   };
 
   const setBlobToBody = async (blob) => {
     const contentType = getContentType(blob);
     if (contentType !== null && contentType.toLowerCase().includes("text")) {
-      setResourceBlob(blob);
       setBody(await blob.text());
     } else {
       // TODO: Allow nontext blob to be downloaded instead to preview (not in browser app)
     }
   };
 
-  // https://docs.inrupt.com/developer-tools/api/javascript/solid-client/modules/resource_file.html
+
   // custom fetch to extract headers (??????) Edit: YES IT WORKED!!!
-  const { session } = useSession();
-  const [resHeaders, setResHeaders] = useState({ headers: new Headers(), url: "" });
-
-  const [metadataRequest, setMetadataRequest] = useState({ url: "" });
-
-  const [currentVersion, setCurrentVersion] = useState(0);
-  const [versionLocation, setVersionLocation] = useState("");
-
   const fetchWrapper = async (resource, options) => {
-
 
     const fetchedResource = await session.fetch(resource, options);
 
@@ -134,22 +96,7 @@ export const RequestContextProvider = ({ children }) => {
     const fetchResponse = { headers, ok, redirected, status, statusText, time: Date.now(), type, url };
     setResHeaders(fetchResponse);
 
-
-
-    // Continue returning (as is a wrapper)
     return fetchedResource;
-  };
-
-  // TODO: Extract
-  const headersToDescResURI = (headers) => {
-    const linkHeader = headers.get("link");
-
-    if (linkHeader !== null) {
-      const parsedLinks = LinkHeader.parse(linkHeader);
-      const descResURI = parsedLinks.rel("describedby")[0].uri;
-      return descResURI;
-    }
-    return null;
   };
 
   return (
@@ -159,8 +106,8 @@ export const RequestContextProvider = ({ children }) => {
       sendRequest: sendRequest,
       responseHeaders: resHeaders,
       resourceBody: body,
-      metadataURL: metadataRequest,
-      currentVersion: currentVersion,
+      metadataURL: metadataURL,
+      hasVersion: hasVersion,
       versionLocation: versionLocation,
       displayVersion: displayVersion
     }}

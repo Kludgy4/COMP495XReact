@@ -1,10 +1,9 @@
+import React, { useContext } from "react";
 import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
-import React, { useContext } from "react";
-import ContextLogoutButton from "./ContextLogoutButton";
-import { LogoutButton } from "@inrupt/solid-ui-react";
 import { PodContext } from "../context/PodContext";
 import useAuth from "../js/useAuth";
+import ContextLogoutButton from "./ContextLogoutButton";
 
 const pages = [
   { name: "User", location: "/user" },

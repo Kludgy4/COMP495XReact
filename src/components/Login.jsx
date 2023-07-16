@@ -1,25 +1,25 @@
-import { CardActions, CardContent, CardHeader, Typography } from "@mui/material";
-import { LoginButton, useSession } from "@inrupt/solid-ui-react";
 import React, { useContext } from "react";
 import { getResourceInfo, isContainer } from "@inrupt/solid-client";
+import { LoginButton, useSession } from "@inrupt/solid-ui-react";
+import { CardActions, CardContent, CardHeader, Typography } from "@mui/material";
 import Card from "@mui/material/Card";
-import { PodContext } from "../context/PodContext";
 import TextField from "@mui/material/TextField";
-import useAuth from "../js/useAuth";
 import { useNavigate } from "react-router-dom";
+import { PodContext } from "../context/PodContext";
+import useAuth from "../js/useAuth";
 import useResponsiveWidth from "../js/useResponsiveWidth";
 import useWindowSize from "../js/useWindowSize";
 
 export default function Login() {
   const navigate = useNavigate();
 
-  const [width, height] = useWindowSize();
+  const { width } = useWindowSize();
   const contentWidth = useResponsiveWidth(width);
 
   const [oidcIssuer, setOidcIssuer] = React.useState("");
   const [invalidOidc, setInvalidOidc] = React.useState(false);
 
-  const { podURL, setPodURL } = useContext(PodContext);
+  const { setPodURL } = useContext(PodContext);
   const [tempPodURL, setTempPodURL] = React.useState("");
   const [invalidTempPodURL, setInvalidTempPodURL] = React.useState(false);
 

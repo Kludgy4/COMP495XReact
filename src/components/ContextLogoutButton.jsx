@@ -1,8 +1,8 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Button } from "@mui/material";
+import React, { useContext } from "react";
 import { LogoutButton } from "@inrupt/solid-ui-react";
-import { PodContext } from "../context/PodContext";
+import { Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { PodContext } from "../context/PodContext";
 
 export default function ContextLogoutButton() {
   const { setPodURL } = useContext(PodContext);
