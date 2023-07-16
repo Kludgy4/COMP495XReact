@@ -82,12 +82,12 @@ export const convertUnixToDatestring = (timestamp) => {
 ////////////////////////////////////////////////////////////////////////////////
 
 export const getURLAddressAndVersions = async (datasetURL, options) => {
-
   const datasetHandle = await getVersionedDatasetHandle(datasetURL, options);
   const hasVersion = datasetHandle.meta.hasVersion !== null ? datasetHandle.meta.hasVersion : 1;
 
   const urlAddresses = [];
   for (let version = 1; version <= hasVersion; version++) {
+    console.log("Getting version,", version, "of", datasetHandle);
     const { dataset, handle } = await getVersionedDataset(datasetHandle, version, options);
 
     const datasetAddressThing = getThing(dataset, datasetURL);

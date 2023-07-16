@@ -31,8 +31,12 @@ export const getVersionedDatasetHandle = async (url: string, options): Promise<V
 
   let metaset;
   try {
-    metaset = await getVersionedDescriptionResourceSet(url, metadataURL, options);
-    // metaset = await getSolidDataset(metadataURL, options);
+    // TODO: Only do if I this isn't a past version, otherwise do the latter commented thing
+    if (url.includes(".versions")) {
+      metaset = await getSolidDataset(metadataURL, options);
+    } else {
+      metaset = await getVersionedDescriptionResourceSet(url, metadataURL, options);
+    }
   } catch (e) {
     throw new Error(`Metadata at '${metadataURL}' is not available: ${e.message}`);
   }
