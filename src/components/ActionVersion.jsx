@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { addUrl, buildThing, getFile, getSolidDataset, getThing, getUrlAll, removeUrl, saveFileInContainer, saveSolidDatasetAt, setInteger, setThing } from "@inrupt/solid-client";
+import { addUrl, getFile, getThing, getUrlAll, removeUrl, saveFileInContainer, saveSolidDatasetAt, setInteger, setThing } from "@inrupt/solid-client";
 import { useSession } from "@inrupt/solid-ui-react";
 import { DCTERMS } from "@inrupt/vocab-common-rdf";
 import { Commit, FileDownload, Refresh } from "@mui/icons-material";
@@ -11,7 +11,7 @@ import { getVersionedDatasetHandle } from "../js/versioningLayer";
 export default function ActionVersion() {
 
   const { session } = useSession();
-  const { requestURL, requestVersion, sendRequest, hasVersion, metadataURL, versionLocation, contributors } = useContext(RequestContext);
+  const { requestURL, sendRequest, hasVersion, versionLocation, contributors } = useContext(RequestContext);
 
   const [loadVersion, setLoadVersion] = useState(1);
   const [loadVersionError, setLoadVersionError] = useState(false);
@@ -51,13 +51,14 @@ export default function ActionVersion() {
     const baseFile = await getFile(requestURL, options);
     await saveFileInContainer(versionLocation, baseFile, { slug: hasVersion.toString(), fetch: session.fetch });
 
-    const baseHandle = await getVersionedDatasetHandle(requestURL, options);
-    const verHandle = await getVersionedDatasetHandle(versionLocation + hasVersion, options);
+    const [baseHandle, verHandle] = await Promise.all([
+      getVersionedDatasetHandle(requestURL, options),
+      getVersionedDatasetHandle(versionLocation + hasVersion, options)
+    ]);
     let baseMetaset = baseHandle.metaResourceInfo;
     let verMetaset = verHandle.metaResourceInfo;
     let baseMetathing = getThing(baseMetaset, baseHandle.baseURL);
     let verMetathing = getThing(verMetaset, verHandle.baseURL);
-
 
     for (const contributorWebid of getUrlAll(baseMetathing, DCTERMS.contributor)) {
       // 2. Add contributors to the metadata of the version file
@@ -77,37 +78,6 @@ export default function ActionVersion() {
     ]);
 
     sendRequest(requestURL);
-
-    /*console.log(verHandle);
-    let [metaset, verMetaset] = await Promise.all([
-      getVersionedDatasetHandle(metadataURL, options),
-      getVersionedDatasetHandle(verHandle.metaURL, options)
-    ]);*/
-
-    // Update metadata of versioned file to include its contributors
-    // console.log("Commit handle", verHandle);
-    // let verContributorsThing = getThing(verHandle.metaResourceInfo, verHandle.baseURL);
-    /*
-    let metathing = getThing(metaset, requestURL);
-    const conUrls = getUrlAll(metathing, DCTERMS.contributor);
-    for (const contributorWebid of conUrls) {
-      verContributorsThing = addUrl(verContributorsThing, DCTERMS.contributor, contributorWebid);
-      metathing = removeUrl(metathing, DCTERMS.contributor, contributorWebid);
-    }
-    verMetaset = setThing(verMetaset, verContributorsThing);
-    console.log("saving", verMetaset, "\nat\n", verHandle.metaURL);
-
-    // Update metadata of file to reflect new version
-    console.log("latest", currVersion);
-    metathing = setInteger(metathing, hasVersionPredicate, currVersion + 1);
-    metaset = setThing(metaset, metathing);
-
-    await Promise.all([
-      saveSolidDatasetAt(metadataURL, metaset, options),
-      saveSolidDatasetAt(verHandle.metaURL, verMetaset, options),
-    ]);
-
-    sendRequest(requestURL);*/
   };
 
   // React.useEffect(() => {
