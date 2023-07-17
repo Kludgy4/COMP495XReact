@@ -47,21 +47,47 @@ export default function ActionVersion() {
   const commitVersion = async () => {
     const options = { fetch: session.fetch };
 
+    // 1. Copy/paste the base file into the .versions folder provisioned earlier as a version
     const baseFile = await getFile(requestURL, options);
-    const currVersion = hasVersion.toString();
-    await saveFileInContainer(versionLocation, baseFile, { slug: currVersion, fetch: session.fetch });
+    await saveFileInContainer(versionLocation, baseFile, { slug: hasVersion.toString(), fetch: session.fetch });
 
-    // Version file using linked versioning folder
-    /*const verUrl = versionLocation + currVersion;
-    const verHandle = await getVersionedDatasetHandle(verUrl, options);
-    console.log(verHandle);
-    let [verMetaset, metaset] = await Promise.all([
-      getSolidDataset(verHandle.metaURL, options),
-      getSolidDataset(metadataURL, options)
+    const baseHandle = await getVersionedDatasetHandle(requestURL, options);
+    const verHandle = await getVersionedDatasetHandle(versionLocation + hasVersion, options);
+    let baseMetaset = baseHandle.metaResourceInfo;
+    let verMetaset = verHandle.metaResourceInfo;
+    let baseMetathing = getThing(baseMetaset, baseHandle.baseURL);
+    let verMetathing = getThing(verMetaset, verHandle.baseURL);
+
+
+    for (const contributorWebid of getUrlAll(baseMetathing, DCTERMS.contributor)) {
+      // 2. Add contributors to the metadata of the version file
+      verMetathing = addUrl(verMetathing, DCTERMS.contributor, contributorWebid);
+      // 3. Update the metadata of the base file (remove contributors and add +1 to version num)
+      baseMetathing = removeUrl(baseMetathing, DCTERMS.contributor, contributorWebid);
+    }
+    baseMetathing = setInteger(baseMetathing, hasVersionPredicate, baseHandle.meta.hasVersion + 1);
+    baseMetaset = setThing(baseMetaset, baseMetathing);
+
+    // 2. cont
+    verMetaset = setThing(verMetaset, verMetathing);
+
+    await Promise.all([
+      saveSolidDatasetAt(baseHandle.metaURL, baseMetaset, options),
+      saveSolidDatasetAt(verHandle.metaURL, verMetaset, options)
     ]);
 
+    sendRequest(requestURL);
+
+    /*console.log(verHandle);
+    let [metaset, verMetaset] = await Promise.all([
+      getVersionedDatasetHandle(metadataURL, options),
+      getVersionedDatasetHandle(verHandle.metaURL, options)
+    ]);*/
+
     // Update metadata of versioned file to include its contributors
-    let verContributorsThing = getThing(verHandle.metaResourceInfo, verHandle.baseURL);
+    // console.log("Commit handle", verHandle);
+    // let verContributorsThing = getThing(verHandle.metaResourceInfo, verHandle.baseURL);
+    /*
     let metathing = getThing(metaset, requestURL);
     const conUrls = getUrlAll(metathing, DCTERMS.contributor);
     for (const contributorWebid of conUrls) {
