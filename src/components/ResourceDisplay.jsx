@@ -46,8 +46,10 @@ export default function ResourceDisplay({ width }) {
 
   const saveUpdatedFile = async () => {
     console.log(`Saving\n${editorText}\nat\n${requestURL}`);
+    const baseHandle = await getVersionedDatasetHandle(requestURL, { fetch: session.fetch });
     // TODO: update metadata to include the current user
     // Update the file
+    // TODO: stop this from overwriting the metadata???????????
     await overwriteFile(
       requestURL,
       new File([editorText], pathToName(requestURL), { type: contentType }),
@@ -55,14 +57,15 @@ export default function ResourceDisplay({ width }) {
     );
 
     // Add current user as a contributor to the metadata
-    // TODO: Copy and clear when versioned
-    const saveHandle = await getVersionedDatasetHandle(requestURL, { fetch: session.fetch });
-    let metaset = await getSolidDataset(saveHandle.metaURL, { fetch: session.fetch });
+    console.log("savehandle", baseHandle);
+    let metaset = baseHandle.metaResourceInfo;
+    console.log("1", metaset);
     const metathing = buildThing(getThing(metaset, requestURL))
       .addUrl(DCTERMS.contributor, session.info.webId)
       .build();
     metaset = setThing(metaset, metathing);
-    await saveSolidDatasetAt(saveHandle.metaURL, metaset, { fetch: session.fetch });
+    console.log("2", metaset);
+    await saveSolidDatasetAt(baseHandle.metaURL, metaset, { fetch: session.fetch });
 
     setEditing(false);
     sendRequest(requestURL);

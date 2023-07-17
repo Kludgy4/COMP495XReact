@@ -66,15 +66,16 @@ export const RequestContextProvider = ({ children }) => {
       const handle = await getVersionedDatasetHandle(versionedRequest.url, { fetch: session.fetch });
       setHasVersion(handle.meta.hasVersion);
       setVersionLocation(handle.meta.versionedIn);
-      setContributors(handle.meta.contributors);
       setMetadataURL(handle.metaURL);
       const queryVersion = versionedRequest.version !== -1 ? versionedRequest.version : handle.meta.hasVersion;
       setDisplayVersion(queryVersion);
 
-      const resource = await getVersionedDataset(handle, queryVersion, { fetch: session.fetch });
-      setContentType(getContentType(resource.handle.baseResourceInfo));
+      const { handle: verHandle } = await getVersionedDataset(handle, queryVersion, { fetch: session.fetch });
+      setContentType(getContentType(verHandle.baseResourceInfo));
+      console.log(verHandle);
+      setContributors(verHandle.meta.contributors);
       // TODO: Get blob without second nigh identical request
-      const fileBlob = await getFile(resource.handle.baseURL, { fetch: fetchWrapper });
+      const fileBlob = await getFile(verHandle.baseURL, { fetch: fetchWrapper });
       //   const fileBlob = await getFile(resourceVersionLocation, { fetch: session.fetch });
       setBlobToBody(fileBlob);
 

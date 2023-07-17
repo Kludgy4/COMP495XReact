@@ -1,15 +1,17 @@
 import React, { useContext, useState } from "react";
-import { buildThing, getFile, getSolidDataset, getThing, saveFileInContainer, saveSolidDatasetAt, setThing } from "@inrupt/solid-client";
+import { addUrl, buildThing, getFile, getSolidDataset, getThing, getUrlAll, removeUrl, saveFileInContainer, saveSolidDatasetAt, setInteger, setThing } from "@inrupt/solid-client";
 import { useSession } from "@inrupt/solid-ui-react";
+import { DCTERMS } from "@inrupt/vocab-common-rdf";
 import { Commit, FileDownload, Refresh } from "@mui/icons-material";
 import { Button, Dialog, DialogActions, DialogTitle, TextField, Typography } from "@mui/material";
 import { RequestContext } from "../context/RequestContext";
 import { hasVersionPredicate } from "../js/urls";
+import { getVersionedDatasetHandle } from "../js/versioningLayer";
 
 export default function ActionVersion() {
 
   const { session } = useSession();
-  const { requestURL, sendRequest, hasVersion, metadataURL, versionLocation, contributors } = useContext(RequestContext);
+  const { requestURL, requestVersion, sendRequest, hasVersion, metadataURL, versionLocation, contributors } = useContext(RequestContext);
 
   const [loadVersion, setLoadVersion] = useState(1);
   const [loadVersionError, setLoadVersionError] = useState(false);
@@ -43,18 +45,43 @@ export default function ActionVersion() {
   };
 
   const commitVersion = async () => {
+    const options = { fetch: session.fetch };
+
+    const baseFile = await getFile(requestURL, options);
+    const currVersion = hasVersion.toString();
+    await saveFileInContainer(versionLocation, baseFile, { slug: currVersion, fetch: session.fetch });
+
     // Version file using linked versioning folder
-    const currFile = await getFile(requestURL, { fetch: session.fetch });
-    saveFileInContainer(versionLocation, currFile, { slug: hasVersion.toString(), fetch: session.fetch });
+    /*const verUrl = versionLocation + currVersion;
+    const verHandle = await getVersionedDatasetHandle(verUrl, options);
+    console.log(verHandle);
+    let [verMetaset, metaset] = await Promise.all([
+      getSolidDataset(verHandle.metaURL, options),
+      getSolidDataset(metadataURL, options)
+    ]);
+
+    // Update metadata of versioned file to include its contributors
+    let verContributorsThing = getThing(verHandle.metaResourceInfo, verHandle.baseURL);
+    let metathing = getThing(metaset, requestURL);
+    const conUrls = getUrlAll(metathing, DCTERMS.contributor);
+    for (const contributorWebid of conUrls) {
+      verContributorsThing = addUrl(verContributorsThing, DCTERMS.contributor, contributorWebid);
+      metathing = removeUrl(metathing, DCTERMS.contributor, contributorWebid);
+    }
+    verMetaset = setThing(verMetaset, verContributorsThing);
+    console.log("saving", verMetaset, "\nat\n", verHandle.metaURL);
 
     // Update metadata of file to reflect new version
-    console.log(metadataURL);
-    let metaset = await getSolidDataset(metadataURL, { fetch: session.fetch });
-    let metathing = getThing(metaset, requestURL);
-    metathing = buildThing(metathing).setInteger(hasVersionPredicate, hasVersion + 1).build();
+    console.log("latest", currVersion);
+    metathing = setInteger(metathing, hasVersionPredicate, currVersion + 1);
     metaset = setThing(metaset, metathing);
-    await saveSolidDatasetAt(metadataURL, metaset, { fetch: session.fetch });
-    sendRequest(requestURL);
+
+    await Promise.all([
+      saveSolidDatasetAt(metadataURL, metaset, options),
+      saveSolidDatasetAt(verHandle.metaURL, verMetaset, options),
+    ]);
+
+    sendRequest(requestURL);*/
   };
 
   // React.useEffect(() => {

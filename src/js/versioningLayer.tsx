@@ -13,6 +13,7 @@ import { contentTypePredicate, hasVersionPredicate, versionedInPredicate } from 
  * @returns 
  */
 export const getVersionedDatasetHandle = async (url: string, options): Promise<VersionedDatasetHandle> => {
+  console.log(`Getting a handle for ${url}`);
   // Get the metadata
   let baseDataset;
   try {
@@ -31,6 +32,7 @@ export const getVersionedDatasetHandle = async (url: string, options): Promise<V
   let metaset;
   try {
     // TODO: Only do if I this isn't a past version, otherwise do the latter commented thing
+    // TODO: Also fix because this is slow haha
     if (url.includes(".versions")) {
       metaset = await getSolidDataset(metadataURL, options);
     } else {
@@ -50,6 +52,7 @@ export const getVersionedDatasetHandle = async (url: string, options): Promise<V
     baseURL: url,
     baseResourceInfo: baseDataset,
     metaURL: metadataURL,
+    metaResourceInfo: metaset,
     meta: {
       hasVersion: getInteger(metathing, hasVersionPredicate),
       versionedIn: getUrl(metathing, versionedInPredicate),
@@ -185,6 +188,7 @@ interface VersionedDatasetHandle {
   baseURL: string;
   baseResourceInfo: WithServerResourceInfo;
   metaURL: string;
+  metaResourceInfo: WithServerResourceInfo;
   meta: VersionedDatasetMeta;
 }
 
