@@ -1,14 +1,10 @@
 import React, { useContext, useEffect, useState } from "react";
-import { buildThing, getThing, overwriteFile, saveSolidDatasetAt, setThing } from "@inrupt/solid-client";
 import { useSession } from "@inrupt/solid-ui-react";
-import { DCTERMS } from "@inrupt/vocab-common-rdf";
 import { Button, MenuItem, Paper, Select, Switch, TextField, Typography } from "@mui/material";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { RequestContext } from "../context/RequestContext";
-import { pathToName } from "../js/helper";
-import { hasVersionPredicate } from "../js/urls";
-import { getVersionedDatasetHandle } from "../js/versioningLayer";
+import { saveUpdatedFile } from "../js/helper";
 
 export default function ResourceDisplay({ width }) {
 
@@ -45,25 +41,10 @@ export default function ResourceDisplay({ width }) {
     setEditorText(e.target.value);
   };
 
-  const saveUpdatedFile = async () => {
-    console.log(`Saving\n${editorText}\nat\n${requestURL}`);
-
-    await overwriteFile(
-      requestURL,
-      new File([editorText], pathToName(requestURL), { type: contentType }),
-      { contentType: contentType, fetch: session.fetch }
-    );
-
-    const baseHandle = await getVersionedDatasetHandle(requestURL, { fetch: session.fetch });
-    let baseMetaset = baseHandle.metaResourceInfo;
-    const baseMetathing = buildThing(getThing(baseMetaset, baseHandle.baseURL))
-      .addUrl(DCTERMS.contributor, session.info.webId)
-      .setInteger(hasVersionPredicate, hasVersion)
-      .build();
-    baseMetaset = setThing(baseMetaset, baseMetathing);
-    await saveSolidDatasetAt(baseHandle.metaURL, baseMetaset, { fetch: session.fetch });
-
+  const handleSaveFile = async () => {
+    await saveUpdatedFile(editorText, requestURL, hasVersion, contentType, session);
     setEditing(false);
+    console.log("yeet", requestURL);
     sendRequest(requestURL);
   };
 
@@ -72,7 +53,7 @@ export default function ResourceDisplay({ width }) {
       <div id="filePreviewInfo">
         {editing ? (
           <div className="filePreviewInfoBox">
-            <Button onClick={saveUpdatedFile}>Save</Button>
+            <Button onClick={handleSaveFile}>Save</Button>
           </div>
         ) : (
           <div className="filePreviewInfoBox">

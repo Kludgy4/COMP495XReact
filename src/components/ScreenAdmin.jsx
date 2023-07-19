@@ -225,16 +225,18 @@ const AddressAtDateSearch = ({ setUserAddresses }) => {
 
       // Find correct address for given time/date
       // console.log("searching " + dayjs(searchDate).toString());
-      const searchTimestamp = dayjs(searchDate).unix();
-      const datedAddrIndex = webidAddresses.findIndex(addr => searchTimestamp >= addr.versionDate);
+      // +86400 ensures the end of the selected date, so the most recent of identically dated addresses is chosen
+      const searchTimestamp = dayjs(searchDate).unix() + 86400;
+      const datedAddrIndex = webidAddresses.findLastIndex(addr => searchTimestamp >= addr.versionDate);
 
       if (datedAddrIndex !== -1) {
         webidAddress["address"] = addressObjToString(webidAddresses[datedAddrIndex]);
         const f = "DD/MM/YYYY";
-        if (datedAddrIndex < webidAddresses.length - 1) {
-          webidAddress["dateRange"] = dayjs(webidAddresses[datedAddrIndex].dateRange).format(f) + " - " + dayjs(webidAddresses[datedAddrIndex + 1].dateRange).format(f);
+        if (datedAddrIndex < webidAddresses.length - 2) {
+          console.log(webidAddresses[datedAddrIndex].versionDate, searchTimestamp);
+          webidAddress["dateRange"] = dayjs.unix(webidAddresses[datedAddrIndex].versionDate).format(f) + " - " + dayjs.unix(webidAddresses[datedAddrIndex + 1].versionDate).format(f);
         } else {
-          webidAddress["dateRange"] = dayjs(webidAddresses[datedAddrIndex].dateRange).format(f) + " - " + dayjs().format(f);
+          webidAddress["dateRange"] = dayjs.unix(webidAddresses[datedAddrIndex].versionDate).format(f) + " - " + dayjs().format(f);
         }
       }
 

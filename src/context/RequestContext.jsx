@@ -72,7 +72,6 @@ export const RequestContextProvider = ({ children }) => {
 
       const { handle: verHandle } = await getVersionedDataset(handle, queryVersion, { fetch: session.fetch });
       setContentType(getContentType(verHandle.baseResourceInfo));
-      console.log(verHandle);
       setContributors(verHandle.meta.contributors);
       // TODO: Get blob without second nigh identical request
       const fileBlob = await getFile(verHandle.baseURL, { fetch: fetchWrapper });

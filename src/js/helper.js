@@ -1,9 +1,11 @@
 import {
-  createAclFromFallbackAcl, getResourceAcl, getStringNoLocale, getThing, hasAccessibleAcl, hasFallbackAcl, hasResourceAcl
+  buildThing,
+  createAclFromFallbackAcl, getResourceAcl, getStringNoLocale, getThing, hasAccessibleAcl, hasFallbackAcl, hasResourceAcl, overwriteFile, saveSolidDatasetAt, setThing
 } from "@inrupt/solid-client";
-import { SCHEMA_INRUPT } from "@inrupt/vocab-common-rdf";
+import { DCTERMS, SCHEMA_INRUPT } from "@inrupt/vocab-common-rdf";
 import dayjs from "dayjs";
 import { enqueueSnackbar } from "notistack";
+import { hasVersionPredicate } from "./urls";
 import { getVersionedDataset, getVersionedDatasetHandle } from "./versioningLayer";
 
 export const displayError = (message) => enqueueSnackbar(message, { variant: "error" });
@@ -114,56 +116,23 @@ export const addressObjToString = (o) => {
 ////////////////////////////////////////////////////////////////////////////////
 /////                           Versioning Layer                           /////
 ////////////////////////////////////////////////////////////////////////////////
-/*
-export const getVersionedDataset = async (baseURL, version, options) => {
 
-  const metadata = await getURLMetadata(baseURL, options);
+export const saveUpdatedFile = async (editorText, requestURL, hasVersion, contentType, session) => {
+  console.log(`Saving\n${editorText}\nat\n${requestURL}`);
 
-  // The resource requested is not available if
-  if (
-    //   a. A versioning predicate is not available and anything but version 1 is requested
-    (!metadata[hasVersionPredicate] || !metadata[versionedInPredicate]) && version !== 1 ||
-    //   b. The version requested is outside of the available bounds
-    version < 1 || version > metadata[hasVersionPredicate]
-  ) {
-    throw new Error("Requested resource version does not exist");
-  }
+  await overwriteFile(
+    requestURL,
+    new File([editorText], pathToName(requestURL), { type: contentType }),
+    { contentType: contentType, fetch: session.fetch }
+  );
 
-  // Base case
-  if (version === metadata[hasVersionPredicate]) return {
-    dataset: await getSolidDataset(baseURL, options),
-    metadata: metadata
-  };
+  const baseHandle = await getVersionedDatasetHandle(requestURL, { fetch: session.fetch });
+  let baseMetaset = baseHandle.metaResourceInfo;
+  const baseMetathing = buildThing(getThing(baseMetaset, baseHandle.baseURL))
+    .addUrl(DCTERMS.contributor, session.info.webId)
+    .setInteger(hasVersionPredicate, hasVersion)
+    .build();
+  baseMetaset = setThing(baseMetaset, baseMetathing);
+  await saveSolidDatasetAt(baseHandle.metaURL, baseMetaset, { fetch: session.fetch });
 
-  // Versioned case
-  const versionedURL = metadata[versionedInPredicate] + version;
-  return {
-    dataset: await getSolidDataset(versionedURL, options),
-    metadata: await getURLMetadata(versionedURL, options)
-  };
 };
-
-export const getURLMetadata = async (url, options) => {
-  // Get the metadata
-  const baseDataset = await getResourceInfo(url, options);
-  const linkedResources = getLinkedResourceUrlAll(baseDataset);
-  const metadataURL = linkedResources["describedby"][0];
-
-  const metaset = await getSolidDataset(metadataURL, options);
-  const metathing = getThing(metaset, url);
-  if (metathing === null) {
-    throw new Error("No description resource metadata available");
-  }
-
-  // Extract the metadata into a convenient format
-  return {
-    [hasVersionPredicate]: getInteger(metathing, hasVersionPredicate),
-    [versionedInPredicate]: getUrl(metathing, versionedInPredicate),
-    [RDF.type]: getUrl(metathing, RDF.type),
-    [DCTERMS.modified]: getInteger(metathing, DCTERMS.modified),
-    [contentTypePredicate]: getStringNoLocale(metathing, contentTypePredicate),
-    [POSIX.mtime]: getInteger(metathing, POSIX.mtime),
-    [POSIX.size]: getInteger(metathing, POSIX.size)
-  };
-};
-*/

@@ -2,6 +2,7 @@ import React, { createContext, useState } from "react";
 
 export const PodContext = createContext({
   podURL: "",
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setPodURL: (podURL) => undefined,
 });
 

@@ -31,8 +31,6 @@ export const getVersionedDatasetHandle = async (url: string, options): Promise<V
 
   let metaset;
   try {
-    // TODO: Only do if I this isn't a past version, otherwise do the latter commented thing
-    // TODO: Also fix because this is slow haha
     if (url.includes(".versions")) {
       metaset = await getSolidDataset(metadataURL, options);
     } else {
@@ -145,10 +143,8 @@ export const getVersionedDescriptionResourceSet = async (baseResourceURL, metada
   if (resourceVersionLocation === null) {
     // No location is currently provisioned for this resource, so provision one and add location as metadata
     const baseContainerURL = pathToContainer(baseResourceURL);
-
     // a. Does a .versions container exist at Pod URL base?
     const versioningContainerURL = baseContainerURL + ".versions/";
-    // TODO: Can I just call createContainerInContainer and have it fail if the container already exists ie. use only 1 query?
     try {
       await getSolidDataset(versioningContainerURL, options);
     } catch (e) {
@@ -160,7 +156,6 @@ export const getVersionedDescriptionResourceSet = async (baseResourceURL, metada
     const resourceVersionContainerURL = versioningContainerURL + pathToName(baseResourceURL) + "/";
     try {
       // Create a versioning container as required
-      // TODO: Does saveSolidDatasetAt create the containers required on the path?
       const re = await createContainerAt(resourceVersionContainerURL, options);
       console.log(re);
     } catch (e) {
