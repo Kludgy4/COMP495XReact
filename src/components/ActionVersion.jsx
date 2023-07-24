@@ -92,7 +92,7 @@ export default function ActionVersion() {
   };
 
   const restoreVersion = async () => {
-    await saveUpdatedFile(resourceBody, requestURL, hasVersion, contentType, session);
+    await saveUpdatedFile(resourceBody, requestURL, hasVersion, contentType, session, contributors);
     sendRequest(requestURL);
   };
 

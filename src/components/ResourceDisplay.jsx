@@ -10,7 +10,7 @@ export default function ResourceDisplay({ width }) {
 
   const { session } = useSession();
 
-  const { requestURL, displayVersion, resourceBody, hasVersion, sendRequest, contentType } = useContext(RequestContext);
+  const { requestURL, displayVersion, resourceBody, hasVersion, sendRequest, contentType, contributors } = useContext(RequestContext);
 
   const [highlightLanguage, setHighlightLanguage] = useState("turtle");
 
@@ -42,7 +42,7 @@ export default function ResourceDisplay({ width }) {
   };
 
   const handleSaveFile = async () => {
-    await saveUpdatedFile(editorText, requestURL, hasVersion, contentType, session);
+    await saveUpdatedFile(editorText, requestURL, hasVersion, contentType, session, contributors);
     setEditing(false);
     console.log("yeet", requestURL);
     sendRequest(requestURL);

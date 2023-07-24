@@ -20,6 +20,7 @@ export default function TreeNode({ resourceURL, parentRefresh }) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const getContainerResources = async () => {
+    console.log("mcskeeterson");
     // Get the URL of all resources inside the container
     const containerDataset = await getSolidDataset(resourceURL, { fetch: session.fetch });
     const containedResources = await getContainedResourceUrlAll(containerDataset);

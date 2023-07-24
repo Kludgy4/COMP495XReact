@@ -1,4 +1,5 @@
 import {
+  addUrl,
   buildThing,
   createAclFromFallbackAcl, getResourceAcl, getStringNoLocale, getThing, hasAccessibleAcl, hasFallbackAcl, hasResourceAcl, overwriteFile, saveSolidDatasetAt, setThing
 } from "@inrupt/solid-client";
@@ -117,8 +118,16 @@ export const addressObjToString = (o) => {
 /////                           Versioning Layer                           /////
 ////////////////////////////////////////////////////////////////////////////////
 
-export const saveUpdatedFile = async (editorText, requestURL, hasVersion, contentType, session) => {
-  console.log(`Saving\n${editorText}\nat\n${requestURL}`);
+export const saveUpdatedFile = async (editorText, requestURL, hasVersion, contentType, session, contributors) => {
+  const container = pathToContainer(requestURL);
+  const name = pathToName(requestURL);
+  console.log(`Saving\n${editorText}\nat\n${requestURL}\nor in ${container} with name ${name}`);
+
+  // await saveFileInContainer(
+  //   container,
+  //   new File([editorText], name, { type: contentType }),
+  //   { slug: name, contentType: contentType, fetch: session.fetch }
+  // );
 
   await overwriteFile(
     requestURL,
@@ -126,12 +135,18 @@ export const saveUpdatedFile = async (editorText, requestURL, hasVersion, conten
     { contentType: contentType, fetch: session.fetch }
   );
 
+  // Reset metadata(overwrite file kills all metadata :( )
   const baseHandle = await getVersionedDatasetHandle(requestURL, { fetch: session.fetch });
   let baseMetaset = baseHandle.metaResourceInfo;
-  const baseMetathing = buildThing(getThing(baseMetaset, baseHandle.baseURL))
+  let baseMetathing = buildThing(getThing(baseMetaset, baseHandle.baseURL))
     .addUrl(DCTERMS.contributor, session.info.webId)
     .setInteger(hasVersionPredicate, hasVersion)
     .build();
+
+  for (const contributor of contributors) {
+    baseMetathing = addUrl(baseMetathing, DCTERMS.contributor, contributor);
+  }
+
   baseMetaset = setThing(baseMetaset, baseMetathing);
   await saveSolidDatasetAt(baseHandle.metaURL, baseMetaset, { fetch: session.fetch });
 
