@@ -4,17 +4,19 @@ import { pathToContainer, pathToName } from "./helper";
 import { contentTypePredicate, hasVersionPredicate, versionedInPredicate } from "./urls";
 
 // Layer is sometimes inefficiently used given its virtual nature. This means it often
-// doubles up on operations when used in practise, but its convenient to use 
+// doubles up on operations when used in practise, but it is convenient to use 
 
 /**
- * 
- * @param url 
- * @param options 
- * @returns 
+ * Retrieves a resource, and its description resource, and returns them in a "handle" with
+ * which future versioned queries can be made. Base resource data or metadata can be directly
+ * read from this handle, which is passed into getVersionedDataset
+ * @param url The "base" url of the resource to retrieve a versioned handle for
+ * @param options The options used in Inrupt functions (here a fetch request)
+ * @returns A handle of base resource info that can be used to make versioned queries
  */
 export const getVersionedDatasetHandle = async (url: string, options): Promise<VersionedDatasetHandle> => {
-  console.log(`Getting a handle for ${url}`);
-  // Get the metadata
+
+  // Get the resource
   let baseDataset;
   try {
     baseDataset = await getResourceInfo(url, options);
@@ -22,6 +24,7 @@ export const getVersionedDatasetHandle = async (url: string, options): Promise<V
     throw new Error(`Resource at '${url}' is not available: ${e.message}`);
   }
 
+  // Get the metadata
   const linkedResources = getLinkedResourceUrlAll(baseDataset);
   const metadataResources = linkedResources["describedby"];
   if (metadataResources === undefined) {
@@ -29,6 +32,8 @@ export const getVersionedDatasetHandle = async (url: string, options): Promise<V
   }
   const metadataURL = metadataResources[0];
 
+  // Get metadata SolidDataset differently depending on whether you are getting a handle
+  // for the base resource, or a versioned resource
   let metaset;
   try {
     if (url.includes(".versions")) {
@@ -65,19 +70,24 @@ export const getVersionedDatasetHandle = async (url: string, options): Promise<V
 };
 
 /**
- * 
- * @param versionedDatasetHandle 
- * @param version 
- * @param options 
- * @returns 
+ * Performs a versioned query to the dataset using the provided handle. Equivalent to passing in a
+ * url and version, as if that version were passed in the header of the request, abstracts away from
+ * the application details required to simulate versioning. Returns an Inrupt SolidDataset and a new handle
+ * for the resource if required. As if calling getSolidDataset + a version.
+ * @param versionedDatasetHandle Used to make efficient, error-checked versioned queries close to how real interface would
+ * @param version The version of the resource to retrieve. Can only be in the range [1 <= version <= hasVersion]
+ * @param options The options used in Inrupt functions (here a fetch request)
+ * @returns An Inrupt "SolidDataset" that represents the queried resource
  */
 export const getVersionedDataset = async (versionedDatasetHandle: VersionedDatasetHandle, version: number, options) => {
 
   const handle = versionedDatasetHandle;
   const meta = versionedDatasetHandle.meta;
 
+  // Is this resource versioned?
   if (meta.hasVersion === null || meta.versionedIn === null) {
     if (version === 1) {
+      // The resource requested is the base resource, so versioned request successful
       return {
         dataset: await getSolidDataset(handle.baseURL, options),
         handle: handle
@@ -112,9 +122,9 @@ export const getVersionedDataset = async (versionedDatasetHandle: VersionedDatas
  * Checks that the Resource Description "dataset" is valid, and contains what
  * is required for versioning. Adds versioning predicates if missing and sets
  * up folders required for versioning
- * @param {*} baseResourceURL The URL of the unversioned resource
- * @param {*} metadataURL The URL pointing to the "description resource" of the base resource
- * @param {*} authFetch A function that can make authenticated fetch requests to the above resources
+ * @param baseResourceURL The URL of the unversioned resource
+ * @param metadataURL The URL pointing to the "description resource" of the base resource
+ * @param authFetch A function that can make authenticated fetch requests to the above resources
  * @returns A versioned resource description set that can be used to extract metadata info about a file
  */
 // export const getVersionedResourceDescriptionSet = async (podURL, baseResourceURL, metadataURL, authFetch) => {
